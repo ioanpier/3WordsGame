@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Movies</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_starting_screen">StartingScreen</string>
+    <string name="title_activity_join_room">JoinRoom</string>
+    <string name="title_activity_create_room">CreateRoom</string>
+    <string name="title_activity_bluetooth_turned_off">BluetoothTurnedOff</string>
+    <string name="title_activity_play">Play</string>
+    
+    <string name="dialog_bt_paired_devices">Paired Devices</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_local_game">LocalGame</string>
+</resources>
