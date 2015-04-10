@@ -116,6 +116,7 @@ public class LocalGame extends ActionBarActivity {
                     receivedBroadcast(intent);
                 }
             };
+
         }
 
 
@@ -143,8 +144,6 @@ public class LocalGame extends ActionBarActivity {
                         System.out.println(device.getName());
                         list.add(device.getName() + "\n" + device.getAddress());
                         deviceAdapter.notifyDataSetChanged();
-                        //mBluetoothAdapter.cancelDiscovery();
-
                     }
                     break;
 
@@ -252,7 +251,7 @@ public class LocalGame extends ActionBarActivity {
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH);
             }
             else {
-                //getDevices is also called inside the enableBtIntent if the user clicked enable
+                //getDevices is also called inside the enableBtIntent if the user enabled the bluetooth
                 getDevices();
             }
 
@@ -291,14 +290,15 @@ public class LocalGame extends ActionBarActivity {
                         break;
                 }
             } else {
-                Log.v(LOG_TAG, "other requestCode " + requestCode);
+                Log.v(LOG_TAG, "other requestCode " + requestCode + " with Uri: " + data.getData().toString());
+
             }
 
         }
 
         //Gets the
         public void getDevices() {
-            //getPairedDevices();
+            getPairedDevices();
             getAvailableDevices();
         }
 
@@ -320,10 +320,14 @@ public class LocalGame extends ActionBarActivity {
 
 
         public void getAvailableDevices() {
-            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(ACTION_FOUND);
+            filter.addAction(ACTION_DISCOVERY_STARTED);
+            filter.addAction(ACTION_DISCOVERY_FINISHED);
             initBroadcastReceiver();
             getActivity().registerReceiver(mReceiver, filter);
             mBluetoothAdapter.startDiscovery();
+            Log.v(LOG_TAG, "Starting Discovery");
         }
 
         private void spectate(String MACaddress) {
@@ -363,8 +367,9 @@ public class LocalGame extends ActionBarActivity {
                 mBtSocket = device.createRfcommSocketToServiceRecord(mUuid);
                 mBluetoothAdapter.cancelDiscovery();
                 mBtSocket.connect();
+                Log.v(LOG_TAG, "connected");
             } catch (IOException e) {
-                Log.v(LOG_TAG, e.getMessage());
+                Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
             }
 
         }

@@ -28,8 +28,6 @@ public class PlaceholderFragment extends Fragment {
         image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO the 2nd parameter should be the StartingScreen.class
-                //This is for testing purposes only
                 Intent intent = new Intent(getActivity(), StartingScreen.class);
                 startActivity(intent);
             }
