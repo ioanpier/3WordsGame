@@ -6,12 +6,12 @@ import android.net.Uri;
 import android.provider.BaseColumns;
 
 /**
- * Created by Ioannis on 3/4/2015.
+ * Created by Ioannis
  */
 public class StoriesContract {
     public static final String CONTENT_AUTHORITY = "grioanpier.auth.users.movies";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
-    public static final String PATH_STORIES = "weather";
+    public static final String PATH_STORIES = "stories";
 
     public static final class StoriesEntry implements BaseColumns {
         public static final String TABLE_NAME = "stories";
@@ -26,6 +26,10 @@ public class StoriesContract {
 
         public static Uri buildStoriesUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
+        public static Uri buildStoriesSpecific (String storySpecific){
+            return CONTENT_URI.buildUpon().appendPath(storySpecific).build();
         }
 
         public static String getStorySpecificFromUri (Uri uri){

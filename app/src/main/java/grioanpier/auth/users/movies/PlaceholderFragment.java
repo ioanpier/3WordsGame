@@ -1,15 +1,19 @@
 package grioanpier.auth.users.movies;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import grioanpier.auth.users.movies.data.StoriesContract;
+
 /**
- * Created by Ioannis on 11/3/2015.
+ * Created by Ioannis
  */
 public class PlaceholderFragment extends Fragment {
     public PlaceholderFragment() {
@@ -32,7 +36,8 @@ public class PlaceholderFragment extends Fragment {
         });
 
 
-
+        Uri storySpecificUri = StoriesContract.StoriesEntry.buildStoriesSpecific("Weird Story");
+        Log.v("TestStoriesContract",storySpecificUri.toString());
 
 
         return rootView;

@@ -43,6 +43,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="grioanpier.auth.users.movies.StartingScreen" />
         </activity>
+        <provider
+            android:authorities="grioanpier.auth.users.movies"
+            android:name=".data.StoriesProvider"
+            android:enabled="true"
+            android:exported="true"/>
     </application>
 
 </manifest>
