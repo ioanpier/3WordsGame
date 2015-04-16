@@ -11,7 +11,7 @@
         android:gravity="center"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/white"
-        android:text="3 Words Story"
+        android:text="@string/app_name"
         android:id="@+id/textView" />
 
     <ImageView
@@ -28,8 +28,7 @@
         android:gravity="center"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/white"
-        android:text="Make a story with other people
-3 words at a time"
+        android:text="@string/app_description"
         android:id="@+id/textView2"
         android:layout_marginTop="-100dp"/>
 

@@ -15,38 +15,11 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, new MainActivityFragment())
                     .commit();
          
         }
     }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        System.out.println("onStart");
-    }
-    @Override
-    protected void onResume() {
-        super.onResume();
-        System.out.println("onResume");
-    }
-    @Override
-    protected void onPause() {
-        super.onPause();
-        System.out.println("onPause");
-    }
-    @Override
-    protected void onStop() {
-        super.onStop();
-        System.out.println("onStop");
-    }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        System.out.println("onDestroy");
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

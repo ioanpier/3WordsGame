@@ -1,0 +1,29 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="@dimen/activity_vertical_margin"
+
+    tools:context="grioanpier.auth.users.movies.WaitingScreen$PlaceholderFragment"
+    android:orientation="vertical">
+
+    <fragment
+        android:id="@+id/waiting_screen_fragment"
+        android:name="grioanpier.auth.users.movies.WaitingScreenFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout="@layout/fragment_waiting_screen"
+
+        />
+
+    <fragment
+        android:id="@+id/chat_fragment"
+        android:name="grioanpier.auth.users.movies.BluetoothChatFragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:context="grioanpier.auth.users.movies.BluetoothChatFragment"
+        tools:layout="@layout/fragment_bluetooth_chat" />
+
+
+
+</LinearLayout>

@@ -1,6 +1,5 @@
 package grioanpier.auth.users.movies;
 
-import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -63,13 +62,14 @@ public class StartingScreen extends ActionBarActivity {
             View rootView = inflater.inflate(R.layout.starting_screen, container, false);
 
 
-            Button button_joinroom = (Button) rootView.findViewById(R.id.multiplayer_button);
-            button_joinroom.setOnClickListener(new View.OnClickListener() {
+            Button button_multiplayer = (Button) rootView.findViewById(R.id.multiplayer_button);
+            /*
+            button_multiplayer.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
                 }
-            });
+            });*/
 
             Button button_localgame = (Button) rootView.findViewById(R.id.localgame_button);
             button_localgame.setOnClickListener(new View.OnClickListener() {
@@ -79,11 +79,6 @@ public class StartingScreen extends ActionBarActivity {
                     startActivity(intent);
                 }
             });
-
-            //If the device doesn't support bluetooth, disable the local game button.
-            if (BluetoothAdapter.getDefaultAdapter() == null)
-                button_localgame.setEnabled(false);
-
 
             return rootView;
         }

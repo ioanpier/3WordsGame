@@ -1,18 +1,13 @@
 package grioanpier.auth.users.movies;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,23 +20,58 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+
+import grioanpier.auth.users.movies.bluetooth.ConnectTaskLoader;
+import grioanpier.auth.users.movies.utility.ApplicationHelper;
+import grioanpier.auth.users.movies.utility.BluetoothManager;
+import grioanpier.auth.users.movies.utility.Constants;
 
 
 public class LocalGame extends ActionBarActivity {
 
+    private static final String LOG_TAG = LocalGame.class.getSimpleName();
+    private static final String sBluetoothManagerFragmentTag = "bluetoothmanager";
+    private static final String sPlaceholderFragmentTag = "localplaceholder";
+    private static final int SOURCE_BUTTON_JOIN = 0;
+    private static final int SOURCE_BUTTON_SPECTATE = 1;
+    private static boolean restored;
+
+    private BluetoothManager btManager;
+    private PlaceholderFragment frag;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        System.out.println("onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_local_game);
+
+        //Finish the activity if there is no Bluetooth on the device.
+        if (!BluetoothManager.isBluetoothAvailable()) {
+            //We are killing the activity in onCreate so the View hasn't been inflated yet.
+            Toast.makeText(getApplicationContext(), "Bluetooth is not available", Toast.LENGTH_LONG).show();
+            this.finish();
+        }
+
         if (savedInstanceState == null) {
+            restored = false;
+            btManager = new BluetoothManager();
+            frag = new PlaceholderFragment();
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, frag, sPlaceholderFragmentTag)
+                    .add(btManager, sBluetoothManagerFragmentTag)
                     .commit();
+        } else {
+            restored = true;
+            btManager = (BluetoothManager) getSupportFragmentManager().findFragmentByTag(sBluetoothManagerFragmentTag);
+            frag = (PlaceholderFragment) getSupportFragmentManager().findFragmentByTag(sPlaceholderFragmentTag);
         }
     }
 
@@ -68,109 +98,110 @@ public class LocalGame extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onStart() {
+        Log.v(LOG_TAG, "onStart");
+        super.onStart();
+
+
+        System.out.println(Boolean.toString(restored));
+        if (BluetoothManager.isBluetoothEnabled()){
+            if (!restored)
+                //If this is the first time running, set the Paired devices.
+                frag.setDevicesList(btManager.getPairedDevices());
+        }
+        else{
+            //The Bluetooth isn't enabled. Set a listener to listen for the result and prompts the user to enable it.
+            btManager.setBluetoothRequestEnableListener(new BluetoothManager.BluetoothRequestEnableListener() {
+                @Override
+                public void onResult(boolean enabled) {
+                    if (!enabled) {
+                        Toast.makeText(getApplicationContext(), "Bluetooth is needed for Local Game", Toast.LENGTH_LONG).show();
+                        btManager.getActivity().finish();
+                    }
+                }
+
+                @Override
+                public void onEnabled() {
+                    frag.setDevicesList(btManager.getPairedDevices());
+                }
+            });
+            btManager.ensureEnabled();
+        }
+
+        //Set a listener for {onDeviceFound} Events. Send the found device to the {@link BluetoothChatFragment}
+        btManager.setBluetoothGetAvailableDevicesListener(new BluetoothManager.BluetoothGetAvailableDevicesListener() {
+            @Override
+            public void onDeviceFound(BluetoothDevice device) {
+                frag.addDeviceInList(device);
+            }
+        });
+
+        //The {@link BluetoothManager} starts the discovery only if it isn't already discovering.
+        btManager.getAvailableDevices();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        //Make sure to cancel the bluetooth discovery.
+        BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+    }
+
+
     /**
-     * A placeholder fragment containing a simple view.
+     * A placeholder fragment containing this screen's view. A list of BluetoothDevices
+     * and buttons to join, spectate, host
      */
     public static class PlaceholderFragment extends Fragment {
 
-        //TODO add a broadcast receiver that will hear for Bluetooth enabled device and start getDevices and startDiscovery
+        //TODO remove this. This is for testing purposes.
+        //my xperia phone mac address
+        private static final String MY_MAC = "18:002D:78:B5:99";
 
-        private static final String LOG_TAG = PlaceholderFragment.class.getSimpleName();
-
-        static BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        private BluetoothSocket mBtSocket = null;
-        BluetoothDevice GM = null;
-
-        //Possible values for resultCode that is passed on the onActivityResult
-        private final static int RESULT_CANCELED = Activity.RESULT_CANCELED;
-        private final static int RESULT_OK = Activity.RESULT_OK;
-        private final static String ACTION_FOUND = BluetoothDevice.ACTION_FOUND;
-        private final static String ACTION_DISCOVERY_STARTED = BluetoothAdapter.ACTION_DISCOVERY_STARTED;
-        private final static String ACTION_DISCOVERY_FINISHED = BluetoothAdapter.ACTION_DISCOVERY_FINISHED;
-
-
-        //Locally defined integer that the system passes back to me in the onActivityResult() implementation as the requestCode parameter.
-        private final static int REQUEST_ENABLE_BLUETOOTH = 1;
+        private static final String LOG_TAG = LocalGame.class.getSimpleName() + PlaceholderFragment.class.getSimpleName();
+        private static final int CONNECT_LOADER = 0;
+        private static final String bundleDeviceList = "devicesListForSaveInstance";
 
         private ListView listView;
         private Button spectate_button;
         private Button join_button;
         private Button host_button;
+        private Button refresh_button;
 
         private View selectedView;
         private String selectedMAC;
 
-        ArrayAdapter<String> deviceAdapter = null;
-        final ArrayList<String> list = new ArrayList();
-
-        // Create a BroadcastReceiver for ACTION_FOUND
-        private BroadcastReceiver mReceiver = null;
-        //UUID was acquired from UUID.randomUUID() once and is now hardcoded
-        //bluetooth client and server must use the same UUID
-        UUID mUuid = UUID.fromString("32276490-f1ce-4c7d-a7ef-01eb87424ecb");
-        String mUuidString = "32276490-f1ce-4c7d-a7ef-01eb87424ecb";
-
-        private void initBroadcastReceiver() {
-            mReceiver = new BroadcastReceiver() {
-                public void onReceive(Context context, Intent intent) {
-                    receivedBroadcast(intent);
-                }
-            };
-
-        }
-
-
-        private void receivedBroadcast(Intent intent) {
-            String action = intent.getAction();
-            Log.v(LOG_TAG, "receivedBroadcast for Bluetooth!");
-            switch (action){
-                case ACTION_DISCOVERY_STARTED:
-                    Log.v(LOG_TAG, "Discovery Started");
-                    break;
-                // When discovery finds a device
-                case ACTION_DISCOVERY_FINISHED:
-                    Log.v(LOG_TAG, "Discovery Finished and Cancelled");
-                    //if (mBluetoothAdapter!=null)
-                    // mBluetoothAdapter.cancelDiscovery();
-                    break;
-                case ACTION_FOUND:
-                    // Get the BluetoothDevice object from the Intent
-                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    if (device==null)
-                        System.out.println("bluetooth was null!");
-                    else{
-                        // Add the name and address to an array adapter to show in a ListView
-                        System.out.println("found one!");
-                        System.out.println(device.getName());
-                        list.add(device.getName() + "\n" + device.getAddress());
-                        deviceAdapter.notifyDataSetChanged();
-                    }
-                    break;
-
-            }
-        }
+        ArrayAdapter<String> devicesAdapter = null;
+        ArrayList<String> devicesList = new ArrayList<>();
+        // HashSet to back up devicesList to prevent duplicates.
+        HashSet<String> devicesSet = new HashSet<>();
+        int devicesNumber = 0;
 
         public PlaceholderFragment() {
         }
 
-        public void onStop(){
+        @Override
+        public void onStop() {
             super.onStop();
-            if (mReceiver != null) {
-                getActivity().unregisterReceiver(mReceiver);
-                mReceiver = null;
-            }
 
-            if (mBluetoothAdapter!=null){
-                mBluetoothAdapter.cancelDiscovery();
-            }
+        }
 
-            if (mBtSocket !=null){
-                try {
-                    mBtSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        @Override
+        public void onSaveInstanceState(Bundle bundle) {
+            super.onSaveInstanceState(bundle);
+
+            if (devicesList != null)
+                bundle.putStringArrayList(bundleDeviceList, devicesList);
+            if (prev != null)
+                bundle.putString(prevDeviceToAttemptToConnect, prev.getAddress());
+        }
+
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setHasOptionsMenu(true);
         }
 
         @Override
@@ -179,12 +210,22 @@ public class LocalGame extends ActionBarActivity {
             View rootView = inflater.inflate(R.layout.local_game_screen, container, false);
             //call findViewById for the join and spectate buttons and assign them their respective onClickListeners
             listView = (ListView) rootView.findViewById(R.id.pairedDevicesList);
-            deviceAdapter = new ArrayAdapter(getActivity(),
-                    android.R.layout.simple_list_item_1,
-                    list);
-            listView.setAdapter(deviceAdapter);
 
-            Log.v(LOG_TAG, mUuid.toString());
+            if (savedInstanceState != null) {
+                devicesList = savedInstanceState.getStringArrayList(bundleDeviceList);
+                devicesNumber = devicesList.size();
+                devicesSet = new HashSet<>(devicesList);
+
+                String prevTemp = savedInstanceState.getString(prevDeviceToAttemptToConnect);
+                if (prevTemp != null)
+                    prev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(prevTemp);
+            }
+
+            devicesAdapter = new ArrayAdapter<>(getActivity(),
+                    android.R.layout.simple_list_item_1,
+                    devicesList);
+
+            listView.setAdapter(devicesAdapter);
 
             //Sets the current selectedView to transparent color when scrolling,
             listView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -217,7 +258,7 @@ public class LocalGame extends ActionBarActivity {
                     selectedView.setBackgroundColor(getResources().getColor(R.color.red));
 
                     //Extract MAC address
-                    selectedMAC = deviceAdapter.getItem(position);
+                    selectedMAC = devicesAdapter.getItem(position);
                     selectedMAC = selectedMAC.substring(selectedMAC.indexOf("\n") + 1, selectedMAC.length());
                 }
             });
@@ -225,179 +266,213 @@ public class LocalGame extends ActionBarActivity {
             spectate_button = (Button) rootView.findViewById(R.id.spectate_button);
             join_button = (Button) rootView.findViewById(R.id.join_button);
             host_button = (Button) rootView.findViewById(R.id.hostgame_button);
+            refresh_button = (Button) rootView.findViewById(R.id.refresh_button);
 
 
             spectate_button.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {spectate(selectedMAC);
+                public void onClick(View v) {
+                    connect(selectedMAC, SOURCE_BUTTON_SPECTATE);
                 }
             });
             join_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    join(selectedMAC);
+                    //connect(selectedMAC, SOURCE_BUTTON_JOIN);
+                    otherconnect(MY_MAC);
                 }
             });
             host_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    host();
+                    //host();
+                    otherhost();
                 }
             });
-
-            //Request that Bluetooth is enabled and call getDevices()
-            if (!mBluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH);
-            }
-            else {
-                //getDevices is also called inside the enableBtIntent if the user enabled the bluetooth
-                getDevices();
-            }
+            refresh_button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    otherrefresh();
+                }
+            });
 
 
             return rootView;
         }
 
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-            if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
-                //The system requested to enable the bluetooth
-                switch (resultCode) {
-                    case RESULT_OK:
-                        getDevices();
-                        break;
-                    case RESULT_CANCELED:
-                        //AlertDialog that informs the player that bluetooth is necessary and requests to enable it.
-                        new AlertDialog.Builder(getActivity())
-                                .setMessage("Bluetooth is needed in order to connect locally with your friends. Please turn on the Bluetooth")
-                                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH);
-                                    }
-                                })
-                                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        // do nothing
-                                    }
-                                })
-                                .setIcon(android.R.drawable.ic_dialog_alert)
-                                .show();
-                        break;
-                    default:
-                        Log.v(LOG_TAG, "other onActivityResult with code: " + resultCode);
-                        break;
-                }
-            } else {
-                Log.v(LOG_TAG, "other requestCode " + requestCode + " with Uri: " + data.getData().toString());
-
-            }
-
-        }
-
-        //Gets the
-        public void getDevices() {
-            getPairedDevices();
-            getAvailableDevices();
-        }
-
-        public void getPairedDevices(){
-            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-            // If there are paired devices
-            if (pairedDevices.size() > 0) {
-                System.out.println("pairedDevices.size()>0");
-                for (BluetoothDevice device : pairedDevices) {
-                    list.add(device.getName() + "\n" + device.getAddress());
-                }
-                deviceAdapter.notifyDataSetChanged();
-
-            } else {
-                //If no paired devices found
-                //do nothing
-            }
-        }
-
-
-        public void getAvailableDevices() {
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(ACTION_FOUND);
-            filter.addAction(ACTION_DISCOVERY_STARTED);
-            filter.addAction(ACTION_DISCOVERY_FINISHED);
-            initBroadcastReceiver();
-            getActivity().registerReceiver(mReceiver, filter);
-            mBluetoothAdapter.startDiscovery();
-            Log.v(LOG_TAG, "Starting Discovery");
-        }
-
-        private void spectate(String MACaddress) {
-            new AlertDialog.Builder(getActivity())
-                    .setMessage("Bluetooth is needed in order to connect locally with your friends. Please turn on the Bluetooth")
-                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            // do nothing
-
-                        }
-                    })
-                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH);
-                        }
-                    })
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .show();
-
-
-        }
-
-        private void join(String MACaddress) {
-            if (MACaddress==null)
+        public void otherconnect(String MACaddress){
+            if (MACaddress == null)
                 return;
-            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(MACaddress);
-            if (device==null){
-                Log.v(LOG_TAG, "couldn't get RemoteDevice");
+
+
+            BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+            final BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(MACaddress);
+            boolean connected = false;
+            UUID uuid;
+            while (!connected){
+                uuid = ApplicationHelper.getNextAvailableUUID();
+                if (uuid==null)
+                {
+                    Toast.makeText(getActivity(), "uuids depleted", Toast.LENGTH_SHORT);
+                    return;
+                }
+
+                try {
+                    Toast.makeText(getActivity(), uuid.toString(), Toast.LENGTH_SHORT);
+                    BluetoothSocket socket = device.createRfcommSocketToServiceRecord(uuid);
+                    socket.connect();
+                    Toast.makeText(getActivity(), "Connected!", Toast.LENGTH_LONG).show();
+                    connected = true;
+                    socket.close();
+                } catch (IOException e) {
+                    Toast.makeText(getActivity(), "Connected ERROR", Toast.LENGTH_LONG).show();
+                    Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
+                }
+            }
+
+
+        }
+
+        public void otherhost(){
+            UUID uuid;
+            boolean connected = false;
+            while (!connected){
+                uuid = ApplicationHelper.getNextAvailableUUID();
+                if (uuid == null){
+                    Toast.makeText(getActivity(), "uuids depleted", Toast.LENGTH_SHORT);
+                    return;
+                }
+                try {
+
+                    BluetoothSocket socket = BluetoothAdapter.getDefaultAdapter().listenUsingRfcommWithServiceRecord(uuid.toString(), uuid).accept();
+                    Toast.makeText(getActivity(), "Hosted!", Toast.LENGTH_LONG).show();
+                    socket.close();
+                } catch (IOException e) {
+                    Toast.makeText(getActivity(), "Hosting ERROR", Toast.LENGTH_LONG).show();
+                    Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
+                }
+            }
+
+        }
+
+        public void otherrefresh(){
+            ApplicationHelper.restoreUUIDs();
+        }
+
+        //The previous BluetoothDevice that we tried to connect to.
+        private BluetoothDevice prev = null;
+        private final static String prevDeviceToAttemptToConnect = "prevdevicetojoin";
+
+        /**
+         * Creates a {@link grioanpier.auth.users.movies.bluetooth.ConnectTaskLoader} to try and connect to the specified device.
+         * If a connection is established, it calls the respective method for the supplied {source}
+         * @param MACaddress the MAC Address of the target device.
+         * @param source Either {SOURCE_BUTTON_JOIN} or {SOURCE_BUTTON_SPECTATE}
+         */
+        private void connect(String MACaddress, final int source) {
+            if (MACaddress == null)
+                return;
+
+            final BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(MACaddress);
+
+            //TODO implemet για όλες τις συσκευές (μήπως να το αφαιρέσω κι ας κάνουν ο,τι θέλουν?)
+            if (prev == null) {
+                prev = device;
+            } else if (!prev.getAddress().equals(device.getAddress())) {
+                //The user wants to connect to a different device. Cancel the previous Loader.
+                Log.v(LOG_TAG, prev.getAddress() + " VS " + device.getAddress());
+
+                getLoaderManager().destroyLoader(CONNECT_LOADER);
+                prev = device;
+            } else {
+                //The loader has already run for this device.
                 return;
             }
-            else {
-                Log.v(LOG_TAG, "Got RemoteDevice");
-            }
 
-            try {
-                mBtSocket = device.createRfcommSocketToServiceRecord(mUuid);
-                mBluetoothAdapter.cancelDiscovery();
-                mBtSocket.connect();
-                Log.v(LOG_TAG, "connected");
-            } catch (IOException e) {
-                Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
-            }
 
-        }
+            getLoaderManager().initLoader(CONNECT_LOADER, null, new LoaderManager.LoaderCallbacks<BluetoothSocket>() {
+                @Override
+                public Loader<BluetoothSocket> onCreateLoader(int id, Bundle args) {
+                    Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onCreateLoader");
+                    return new ConnectTaskLoader(getActivity(), device, Constants.sUUIDs);
+                }
 
-        private void host(){
-            Intent makeDiscoverable = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            makeDiscoverable.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 0);
-            startActivity(makeDiscoverable);
-
-            try {
-                BluetoothServerSocket btServerSocket = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(mUuidString, mUuid);
-                if (btServerSocket!=null){
-                    BluetoothSocket btSocket = btServerSocket.accept();
-                    if (btSocket!=null)
-                    {
-                        Log.v(LOG_TAG, "got the btSocket!");
-                        return;
+                @Override
+                //Attempts to connect to the device. If successful, calls spectate(), join() respectively
+                public void onLoadFinished(Loader<BluetoothSocket> loader, BluetoothSocket btSocket) {
+                    Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onLoadFinished");
+                    if (btSocket != null) {
+                        String name = btSocket.getRemoteDevice().getName();
+                        Toast.makeText(getActivity(), "Connected to " + name, Toast.LENGTH_LONG).show();
+                        ApplicationHelper.getInstance().setHostSocket(btSocket);
+                        switch (source){
+                            case SOURCE_BUTTON_JOIN:
+                                join();
+                                break;
+                            case SOURCE_BUTTON_SPECTATE:
+                                spectate();
+                                break;
+                        }
+                    } else {
+                        Toast.makeText(getActivity(), "Couldn't connect to the specified device", Toast.LENGTH_SHORT).show();
                     }
-                    Log.v(LOG_TAG, "btSocket was null!");
                 }
-            } catch (IOException e) {
-                Log.v(LOG_TAG, "host button crashed!");
-                Log.v(LOG_TAG, e.getMessage());
-            }
 
+                @Override
+                public void onLoaderReset(Loader<BluetoothSocket> loader) {
+                    Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onLoaderReset");
+                }
+            });
 
         }
 
+        private void spectate() {
+            Intent intent = new Intent(getActivity(), WaitingScreen.class);
+            intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_SPECTATOR);
+            startActivity(intent);
+        }
+
+        private void join() {
+            Intent intent = new Intent(getActivity(), WaitingScreen.class);
+            intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_PLAYER);
+            startActivity(intent);
+        }
+
+        private void host() {
+            cancelDiscovery();
+            ApplicationHelper.restoreUUIDs();
+            Intent intent = new Intent(getActivity(), WaitingScreen.class);
+            intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_HOST);
+            startActivity(intent);
+        }
+
+
+        private void cancelDiscovery() {
+            BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+        }
+
+
+        public void setDevicesList(Set<BluetoothDevice> list) {
+            System.out.println("CALLED");
+            String string;
+            for (BluetoothDevice device : list) {
+                string = device.getName() + "\n" + device.getAddress();
+                System.out.println("added");
+                if (devicesSet.add(string)) {
+                    devicesAdapter.add(string);
+                    devicesNumber++;
+                }
+            }
+        }
+
+        public void addDeviceInList(BluetoothDevice device) {
+            String string = device.getName() + "\n" + device.getAddress();
+            if (devicesSet.add(string)) {
+                devicesAdapter.add(string);
+                devicesNumber++;
+            }
+        }
 
     }
 }

@@ -10,7 +10,7 @@
         android:gravity="center"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/white"
-        android:text="3 Words Story"
+        android:text="@string/app_name"
         android:id="@+id/textView"
         android:layout_marginTop="50dp"
         android:layout_marginBottom="@dimen/activity_horizontal_margin"/>
@@ -18,7 +18,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Multiplayer"
+        android:text="@string/multiplayer"
         android:enabled="false"
         android:id="@+id/multiplayer_button"
         android:layout_gravity="center_horizontal"
@@ -27,7 +27,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Local Game"
+        android:text="@string/localgame"
         android:id="@+id/localgame_button"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="@dimen/activity_horizontal_margin"/>
@@ -35,7 +35,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hall of Stories"
+        android:text="@string/hall_of_stories"
         android:id="@+id/hallofstories_button"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="@dimen/activity_horizontal_margin"/>
@@ -43,7 +43,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="About"
+        android:text="@string/about"
         android:id="@+id/about_button"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="@dimen/activity_horizontal_margin"/>

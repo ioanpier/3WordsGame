@@ -65,7 +65,7 @@ public class Play extends ActionBarActivity {
      */
     public static class PlaceholderFragment extends Fragment {
 
-        private ArrayList<String> listItems=new ArrayList<String>();
+        private ArrayList<String> listItems=new ArrayList();
         private ArrayAdapter<String> adapter;
         private InputFilter filter;
         private final int MAX_WORDS = 3;
@@ -85,7 +85,7 @@ public class Play extends ActionBarActivity {
             };
 
             listItems= new ArrayList<>(Arrays.asList(names));
-            adapter = new ArrayAdapter(getActivity(),
+            adapter = new ArrayAdapter<>(getActivity(),
                     android.R.layout.simple_list_item_1,
                     listItems);
 
@@ -112,7 +112,7 @@ public class Play extends ActionBarActivity {
                         }else {
                             System.out.println("Need 3 words!");
                             getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-                            Toast.makeText(getActivity(), "test", Toast.LENGTH_LONG);
+                            Toast.makeText(getActivity(), "test", Toast.LENGTH_LONG).show();
 
                         }
 

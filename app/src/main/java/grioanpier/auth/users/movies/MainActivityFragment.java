@@ -15,8 +15,8 @@ import grioanpier.auth.users.movies.data.StoriesContract;
 /**
  * Created by Ioannis
  */
-public class PlaceholderFragment extends Fragment {
-    public PlaceholderFragment() {
+public class MainActivityFragment extends Fragment {
+    public MainActivityFragment() {
     }
 
     @Override
@@ -40,6 +40,7 @@ public class PlaceholderFragment extends Fragment {
 
         return rootView;
     }
+
 
 
 
