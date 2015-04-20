@@ -17,11 +17,7 @@ public class MainActivity extends ActionBarActivity {
                     .add(R.id.container, new MainActivityFragment())
                     .commit();
         }
-
-        //Intent intent = new Intent(getApplicationContext(), Play.class);
-        //startActivity(intent);
-
-    }
+}
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

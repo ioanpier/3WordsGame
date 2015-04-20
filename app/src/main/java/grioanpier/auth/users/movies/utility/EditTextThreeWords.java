@@ -38,7 +38,6 @@ public class EditTextThreeWords extends EditText {
                 } else {
                     removeFilter(editText);
                 }
-                //System.out.println(String.valueOf(wordsLength) + "/" + MAX_WORDS);
             }
 
             @Override

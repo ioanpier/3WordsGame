@@ -30,8 +30,6 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import grioanpier.auth.users.movies.data.StoriesContract;
-import grioanpier.auth.users.movies.data.StoryInitialAsyncTask;
-import grioanpier.auth.users.movies.data.StoryUpdateAsyncTask;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
 
 public class PlayFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -55,7 +53,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
 
         listView = (ListView) rootView.findViewById(R.id.story_listview);
 
-        adapter = new ArrayAdapter<String>(getActivity(),
+        adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_list_item_1,
                 listItems);
 
@@ -76,11 +74,8 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
                 if (actionId == EditorInfo.IME_ACTION_SEND) {
                     if (countWords(editText.getText().toString()) == 3) {
                         sendMessage(editText.getText().toString());
-
                     } else {
-
                         Toast.makeText(getActivity(), "Put 3 words.", Toast.LENGTH_LONG).show();
-
                     }
 
                     handled = true;
@@ -179,17 +174,18 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
             hideKeyboard();
             ApplicationHelper.myTurn = false;
 
-            if (ApplicationHelper.getInstance().isHost && ApplicationHelper.firstTurn){
+            if (ApplicationHelper.getInstance().isHost && ApplicationHelper.firstTurn) {
                 Log.v(LOG_TAG, "I am the host and this is the first turn.");
                 Log.v(LOG_TAG, "write message with STORY_INITIAL");
-
-                ApplicationHelper.getInstance().write(message, ApplicationHelper.STORY_INITIAL);
-            }
-
-            else {
+                Log.v(LOG_TAG, "story is: " + message);
+                ApplicationHelper.getInstance().write(ApplicationHelper.STORY_INITIAL + message, ApplicationHelper.STORY);
+                //STORY_INITIAL means the received message will be inserted in the database.
+            } else {
                 Log.v(LOG_TAG, "I am not host or this isn't my first turn");
                 Log.v(LOG_TAG, "either way, write message with STORY");
-                ApplicationHelper.getInstance().write(message, ApplicationHelper.STORY);
+                Log.v(LOG_TAG, "story is: " + message);
+                ApplicationHelper.getInstance().write(ApplicationHelper.STORY + message, ApplicationHelper.STORY);
+                //STORY means the received message will be used to update the database additively.
             }
         }
     }
@@ -213,12 +209,13 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Log.v(LOG_TAG, "onCreateLoader");
+        getActivity();
         String storyHead = ApplicationHelper.STORY_HEAD;
-
+        Log.v(LOG_TAG, "validate storyHead " + storyHead);
         //We want the story with COLUMN_HEAD==ApplicationHelper.STORY_HEAD
         return new CursorLoader(getActivity(),
                 StoriesContract.StoriesEntry.CONTENT_URI,
-                new String[]{StoriesContract.StoriesEntry.COLUMN_STORY},
+                new String[]{StoriesContract.StoriesEntry.COLUMN_STORY + " = ?"},
                 StoriesContract.StoriesEntry.COLUMN_HEAD,
                 new String[]{storyHead},
                 null);
@@ -237,7 +234,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
             Log.v(LOG_TAG, s);
 
 
-        adapter = new ArrayAdapter<String>(getActivity(),
+        adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_list_item_1,
                 every3words(story));
 
@@ -279,27 +276,35 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case ApplicationHelper.STORY:
-                    Log.v(LOG_TAG, "STORY CASE");
-                    //Received a new part of the Story
+                    Log.v(LOG_TAG, "message object is "+msg.obj);
                     adapter.add((String) msg.obj);
+                    Log.v(LOG_TAG, "story handler switch is " + (((String) msg.obj).charAt(0) - 48));
+                    switch (((String) msg.obj).charAt(0) - 48) {
+                        case ApplicationHelper.STORY:
+                            Log.v(LOG_TAG, "STORY CASE");
 
-                    new StoryUpdateAsyncTask(mContext).execute((String) msg.obj, ApplicationHelper.STORY_HEAD);
+                            //new StoryUpdateAsyncTask(mContext).execute((String) msg.obj, ApplicationHelper.STORY_HEAD);
+                            break;
+                        case ApplicationHelper.STORY_INITIAL:
+                            Log.v(LOG_TAG, "STORY INITIAL CASE");
 
+                            //new StoryInitialAsyncTask(mContext).execute((String) msg.obj, ApplicationHelper.STORY_HEAD);
+                            ApplicationHelper.firstTurn = false;
+
+
+                            break;
+                        default:
+                            Log.v(LOG_TAG, "default is " + (((String) msg.obj).charAt(0) - 48));
+                            break;
+
+                    }//inner switch
                     if (storyReceivedListener != null) {
                         storyReceivedListener.onStoryReceived();
                     }
-                    break;
-                case ApplicationHelper.STORY_INITIAL:
-                    Log.v(LOG_TAG, "STORY INITIAL CASE");
-                    new StoryInitialAsyncTask(mContext).execute((String) msg.obj, ApplicationHelper.STORY_HEAD);
-                    ApplicationHelper.firstTurn = false;
 
-                    //If the user is the host, he has already added that to the database
-                    break;
-
-            }
+            }//outer switch
         }
-    }
+    }// handler class
 
     public interface StoryReceivedListener {
         public void onStoryReceived();

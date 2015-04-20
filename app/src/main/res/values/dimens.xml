@@ -2,4 +2,20 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    
+    <dimen name="about_textSize">25sp</dimen>
+
+    <!-- Waiting Screen -->
+    <dimen name="playersJoined">18sp</dimen>
+    <dimen name="start_game">15sp</dimen>
+
+    <!-- Starting Screen -->
+    <dimen name="starting_padding_1">10dp</dimen>
+    <dimen name="starting_padding_2">15dp</dimen>
+    <dimen name="start_text">30sp</dimen>
+    <dimen name="start_buttons">15sp</dimen>
+
+
+
+
 </resources>

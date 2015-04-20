@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="grioanpier.auth.users.movies.WaitingScreen$PlaceholderFragment"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@drawable/gdg">
 
     <fragment
         android:id="@+id/waiting_screen_fragment"

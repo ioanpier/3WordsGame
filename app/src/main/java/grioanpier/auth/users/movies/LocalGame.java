@@ -158,13 +158,10 @@ public class LocalGame extends ActionBarActivity {
      */
     public static class PlaceholderFragment extends Fragment {
 
-        //TODO remove this. This is for testing purposes.
-        //my xperia phone mac address
-        private static final String MY_MAC = "18:002D:78:B5:99";
-
         private static final String LOG_TAG = LocalGame.class.getSimpleName() + PlaceholderFragment.class.getSimpleName();
         private static final int CONNECT_LOADER = 0;
         private static final String bundleDeviceList = "devicesListForSaveInstance";
+        private int devicesNumber=0;
 
         private ListView listView;
         private Button spectate_button;
@@ -179,24 +176,16 @@ public class LocalGame extends ActionBarActivity {
         private ArrayList<String> devicesList = new ArrayList<>();
         // HashSet to back up devicesList to prevent duplicates.
         private HashSet<String> devicesSet = new HashSet<>();
-        private int devicesNumber = 0;
 
         private final static String LOADER_STATE = "loader state";
         private int connectLoaderState = STATE_NONE;
         private static int STATE_NONE = 0;
         private static int STATE_RUNNING = 1;
-        private static int STATE_FINISHED = 2;
 
         private static int button_source;
         private static BluetoothDevice connectedDevice;
 
         public PlaceholderFragment() {
-        }
-
-        @Override
-        public void onStop() {
-            super.onStop();
-
         }
 
         @Override
@@ -308,86 +297,25 @@ public class LocalGame extends ActionBarActivity {
                 @Override
                 public void onClick(View v) {
                     connect(selectedMAC, SOURCE_BUTTON_JOIN);
-                    //otherconnect(MY_MAC);
                 }
             });
             host_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     host();
-                    //otherhost();
                 }
             });
             refresh_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    otherrefresh();
+                    refresh();
                 }
             });
 
             return rootView;
         }
 
-/*
-        public void otherconnect(String MACaddress){
-            if (MACaddress == null)
-                return;
-
-
-            BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
-            final BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(MACaddress);
-            boolean connected = false;
-            UUID uuid;
-            while (!connected){
-                uuid = ApplicationHelper.getNextAvailableUUID();
-                if (uuid==null)
-                {
-                    Toast.makeText(getActivity(), "uuids depleted", Toast.LENGTH_SHORT);
-                    return;
-                }
-
-                try {
-                    Toast.makeText(getActivity(), uuid.toString(), Toast.LENGTH_SHORT);
-                    BluetoothSocket socket = device.createRfcommSocketToServiceRecord(uuid);
-                    socket.connect();
-                    Toast.makeText(getActivity(), "Connected!", Toast.LENGTH_LONG).show();
-                    connected = true;
-                    socket.close();
-                } catch (IOException e) {
-                    Toast.makeText(getActivity(), "Connected ERROR", Toast.LENGTH_LONG).show();
-                    Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
-                }
-            }
-
-
-        }
-
-        public void otherhost(){
-            UUID uuid;
-
-            boolean connected = false;
-            while (!connected){
-                uuid = ApplicationHelper.getNextAvailableUUID();
-                if (uuid == null){
-                    Toast.makeText(getActivity(), "uuids depleted", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                try {
-                    Toast.makeText(getActivity(), "Listening: " + uuid.toString(), Toast.LENGTH_LONG).show();
-                    BluetoothSocket socket = BluetoothAdapter.getDefaultAdapter().listenUsingRfcommWithServiceRecord(uuid.toString(), uuid).accept();
-                    Toast.makeText(getActivity(), "Hosted! " + socket.getRemoteDevice().getName(), Toast.LENGTH_LONG).show();
-                    ApplicationHelper.removeNextAvailableUUID();
-                    connected=true;
-                    socket.close();
-                } catch (IOException e) {
-                    Toast.makeText(getActivity(), "Hosting ERROR", Toast.LENGTH_LONG).show();
-                    Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
-                }
-            }
-
-        }
-*/
-        public void otherrefresh(){
+        public void refresh(){
             ApplicationHelper.getInstance().prepareNewGame();
         }
 
@@ -409,7 +337,6 @@ public class LocalGame extends ActionBarActivity {
             if (hostAddress==null)
                 Log.v(LOG_TAG, "hostAddress was null");
             else if (MACaddress.equals(hostAddress)){
-                //TODO make sure if the hostDisconnectes, that the hostAddress is also nulled.
                 Toast.makeText(getActivity(), "Already connected", Toast.LENGTH_SHORT).show();
                 switch (source){
                     case SOURCE_BUTTON_JOIN:
@@ -425,18 +352,12 @@ public class LocalGame extends ActionBarActivity {
 
             final BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(MACaddress);
 
-            //TODO implement για όλες τις συσκευές (μήπως να το αφαιρέσω κι ας κάνουν ο,τι θέλουν?)
+
             if (prev == null) {
                 prev = device;
             } else if (!prev.getAddress().equals(device.getAddress())) {
-                //The user wants to connect to a different device. Cancel the previous Loader.
-                Log.v(LOG_TAG, prev.getAddress() + " VS " + device.getAddress());
-
                 getLoaderManager().destroyLoader(CONNECT_LOADER);
                 prev = device;
-            } else {
-                //The loader has already run for this device.
-                //return;
             }
 
             connectLoaderState = STATE_RUNNING;

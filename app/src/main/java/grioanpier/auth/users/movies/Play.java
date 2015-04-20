@@ -103,6 +103,7 @@ public class Play extends ActionBarActivity {
 
         @Override
         public synchronized void handleMessage(Message msg) {
+            Log.v(LOG_TAG, "msg.what = " + msg.what);
             switch (msg.what) {
                 case ApplicationHelper.PLAYER_DISCONNECTED:
                     Toast.makeText(mContext, msg.obj + " disconnected", Toast.LENGTH_SHORT).show();
@@ -111,7 +112,9 @@ public class Play extends ActionBarActivity {
                     String message = (String) msg.obj;
                     Log.v(LOG_TAG, "ACTIVITY_CODE case: " + message);
                     //These messages always contain a single Integer code.
-                    switch (Integer.valueOf(message)) {
+                    int swithz = ((String)msg.obj).charAt(0) - 48;
+                    Log.v(LOG_TAG, "handler switch "+swithz);
+                    switch (swithz) {
                         case ApplicationHelper.YOUR_TURN:
                             Log.v(LOG_TAG, "STORY TURN");
                             if (deviceType != Constants.DEVICE_SPECTATOR) {

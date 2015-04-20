@@ -81,7 +81,7 @@ public class MainActivityFragment extends Fragment {
         int rowsAffected = getActivity().getContentResolver().update(
                 StoriesContract.StoriesEntry.CONTENT_URI,
                 values,
-                StoriesContract.StoriesEntry.COLUMN_HEAD + " LIKE ?",
+                StoriesContract.StoriesEntry.COLUMN_HEAD + " = ?",
                 selArgs
         );
 

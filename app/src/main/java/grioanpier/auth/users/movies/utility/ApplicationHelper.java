@@ -49,14 +49,6 @@ public class ApplicationHelper extends Application {
         return singleton;
     }
 
-    public boolean isHost() {
-        return isHost;
-    }
-
-    public void setIsHost(boolean flag) {
-        isHost = flag;
-    }
-
     public static UUID getNextAvailableUUID() {
         if (sAvailableUUIDs.isEmpty())
             return null;
@@ -84,9 +76,9 @@ public class ApplicationHelper extends Application {
         sAvailableUUIDs.ensureCapacity(10);
         sAvailableUUIDs.addAll(Arrays.asList(Constants.sUUIDs));
 
-        debug_clearConnectedThreads();
-        debug_closePlayerSockets();
-        debug_closeHostSocket();
+        clearConnectedThreads();
+        closePlayerSockets();
+        closeHostSocket();
 
         isHost = false;
         GAME_HAS_STARTED = false;
@@ -101,6 +93,10 @@ public class ApplicationHelper extends Application {
         Log.v(LOG_TAG, "prepareNewStory");
         //The host is positioned at -1
         whoIsPlaying = -1;
+        GAME_HAS_STARTED = true;
+        firstTurn = true;
+        if (isHost)
+            myTurn=true;
     }
 
     private int getNextPlayer() {
@@ -123,8 +119,7 @@ public class ApplicationHelper extends Application {
      * Called when a player leaves and ensures the correct player is up next.
      */
     public void ensureGameIsPlaying() {
-        //TODO do this correctly.
-        //though this should work. If the player who left was lower than the player playing now, it will tell the same player to play.
+        //If the player who left was lower than the player playing now, it will tell the same player to play.
         //If the player who left was also his turn,
         whoIsPlaying--;
         notifyNextPlayer();
@@ -143,8 +138,7 @@ public class ApplicationHelper extends Application {
         super.onTerminate();
         Log.v(LOG_TAG, "onTerminate");
         Log.e(LOG_TAG, "onTerminate");
-        //TODO implement me!
-        //note I need to re-establish the connections if the user hits the home button and afterwards returns to the application.
+        prepareNewGame();
     }
 
     /**
@@ -187,8 +181,7 @@ public class ApplicationHelper extends Application {
             return hostSocket.getRemoteDevice().getAddress();
     }
 
-    public void debug_closePlayerSockets() {
-        Log.v(LOG_TAG, "debug_closePlayerSockets");
+    public void closePlayerSockets() {
         for (BluetoothSocket socket : playerSockets.values()) {
             try {
                 if (socket != null)
@@ -202,8 +195,7 @@ public class ApplicationHelper extends Application {
 
     }
 
-    public void debug_closeHostSocket() {
-        Log.v(LOG_TAG, "debug_closeHostSocket");
+    public void closeHostSocket() {
         try {
             if (hostSocket != null)
                 hostSocket.close();
@@ -214,7 +206,7 @@ public class ApplicationHelper extends Application {
         }
     }
 
-    public void debug_clearConnectedThreads() {
+    private void clearConnectedThreads() {
         for (ConnectedThread thread : connectedThreads.values())
             thread.cancel();
         connectedThreads.clear();
@@ -301,7 +293,6 @@ public class ApplicationHelper extends Application {
             builder.append(message);
 
             Log.v(LOG_TAG + " write to all threads", "message to be sent: " + builder.toString());
-            Toast.makeText(getApplicationContext(), "write to all threads", Toast.LENGTH_SHORT).show();
             byte[] buffer = builder.toString().getBytes();
 
             //Send the message to every connectedThread as well as to yourself.
@@ -326,7 +317,6 @@ public class ApplicationHelper extends Application {
             builder.append(message);
 
             Log.v(LOG_TAG + " write to single thread", "message to be sent: " + builder.toString());
-            Toast.makeText(getApplicationContext(), "write to single threads", Toast.LENGTH_SHORT).show();
             byte[] buffer = builder.toString().getBytes();
 
             //It's the host turn. This method is only called by the host, therefor send it directly to the host's Handler
@@ -413,12 +403,15 @@ public class ApplicationHelper extends Application {
 
                         case HANDLER_STORY_WRITE:
                             message = builder.substring(1, builder.length());
+                            Log.v(LOG_TAG, "Handler story write message: " + message);
                             storyHandler.obtainMessage(STORY, message).sendToTarget();
                             break;
                         case ACTIVITY_CODE:
 
-                            Log.v(LOG_TAG, activityHandler.getClass().getCanonicalName());
+
                             if (activityHandler != null) {
+                                Log.v(LOG_TAG, activityHandler.getClass().getCanonicalName());
+                                Log.v(LOG_TAG + " ACTIVITY_CODE ", builder.substring(1, builder.length()));
                                 activityHandler.obtainMessage(ACTIVITY_CODE, builder.substring(1, builder.length())).sendToTarget();
                             } else {
                                 Log.v(LOG_TAG, "activityHandler was null");
@@ -438,7 +431,6 @@ public class ApplicationHelper extends Application {
 
                     //Also remove the socket from our list.
                     String who;
-                    BluetoothSocket socket;
                     if (playerSockets.containsKey(msg.arg1)) {
                         Log.v(LOG_TAG, "A player has disconnected!");
                         //The user who left was a player. Simply remove him.
@@ -454,7 +446,6 @@ public class ApplicationHelper extends Application {
                         who = "The host";
 
                         //Wrap up the game
-                        //TODO show the full story in the a separate activity
                         ApplicationHelper.getInstance().GAME_HAS_STARTED = false;
                         ApplicationHelper.getInstance().prepareNewGame();
 
@@ -496,13 +487,15 @@ public class ApplicationHelper extends Application {
     public static final int HANDLER_STORY_WRITE = 3;
     //These are used by the activities for code messages.
     public static final int ACTIVITY_CODE = 4;
+    /*Codes for the activity handler*/
     public static final int YOUR_TURN = 5;
+    public static final int PASS = 6; //The player has passed his turn. This is used by spectators.
+    public static final int START_GAME = 7; //The host has started the game. Next screen please!
 
 
     //These are provided as int
     public static final int PLAYER_CONNECTED = 10;
     public static final int PLAYER_DISCONNECTED = 11;
-    public static final int HOST_DISCONNECTED = 12;
 
 
     //Source codes for the write method.
@@ -513,8 +506,7 @@ public class ApplicationHelper extends Application {
     public static final int MESSAGE_ME = 2;
     public static final int MESSAGE_OTHER = 3;
 
-    /*Codes for the activity handler*/
-    public static final int START_GAME = 4; //The host has started the game. Next screen please!
-    public static final int STORY_TURN = 5; //It's your turn to write 3 words to the story.
-    public static final int PASS = 6; //The player has passed his turn. This is used by spectators.
+
+
+
 }

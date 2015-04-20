@@ -11,7 +11,8 @@ import android.util.Log;
 public class StoryInitialAsyncTask extends AsyncTask<String, Void, Void> {
     private static final String LOG_TAG = StoryInitialAsyncTask.class.getSimpleName();
     private static Context mContext;
-    public StoryInitialAsyncTask(Context context){
+
+    public StoryInitialAsyncTask(Context context) {
         mContext = context;
     }
 
@@ -24,10 +25,13 @@ public class StoryInitialAsyncTask extends AsyncTask<String, Void, Void> {
         values.put(StoriesContract.StoriesEntry.COLUMN_STORY, first3words);
         values.put(StoriesContract.StoriesEntry.COLUMN_HEAD, storyHead);
 
-        mContext.getContentResolver().insert(
-                StoriesContract.StoriesEntry.CONTENT_URI,
-                values
-        );
+        if (mContext != null)
+            mContext.getContentResolver().insert(
+                    StoriesContract.StoriesEntry.CONTENT_URI,
+                    values
+            );
+        else
+            Log.v(LOG_TAG, "mContext is null!");
         return null;
     }
 

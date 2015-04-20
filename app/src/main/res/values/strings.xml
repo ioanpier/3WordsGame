@@ -28,6 +28,10 @@
     <string name="dialog_gamehasstarted_resume">Resume</string>
     <string name="dialog_gamehasstarted_newgame">New Game</string>
 
+    <!-- Waiting Screen -->
+    <string name="info1">This application was made by Ioannis Pierros for the gdgthess Study Jams.</string>
+    <string name="info2">contact me at: ioannis@gmail.com</string>
+
     <!-- Local Game Screen -->
     <string name="select_host_device">Select the host\'s device</string>
     <string name="hostgame_button">Host Game</string>

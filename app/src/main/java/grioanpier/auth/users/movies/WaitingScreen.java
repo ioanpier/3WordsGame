@@ -91,22 +91,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                 btManager.ensureDiscoverable();
                 break;
             }
-            case Constants.DEVICE_PLAYER:
-                Log.v(LOG_TAG, "device player");
-                break;
-            case Constants.DEVICE_SPECTATOR:
-                //TODO implement me
-                //TODO I need to let the host know what that the device is a spectator. I can accomplish this by sending a first message with the type.
-                Toast.makeText(getApplicationContext(), "DEVICE_SPECTATOR CASE HASN'T BEEN IMPLEMENTED YET", Toast.LENGTH_LONG).show();
-                Log.v(LOG_TAG, "DEVICE_SPECTATOR CASE HASN'T BEEN IMPLEMENTED YET");
-                this.finish();
-                break;
-            default:
-                //TODO delete this when done with the app
-                Log.v(LOG_TAG, "deviceType was wrong!");
-                Toast.makeText(getApplicationContext(), "deviceType was wrong!", Toast.LENGTH_LONG).show();
-                this.finish();
-                break;
         }
 
         ApplicationHelper.getInstance().setActivityHandler(mHandler);
@@ -215,8 +199,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                             //Start the Play activity
                             Intent intent = new Intent(mContext, Play.class);
                             intent.putExtra(Constants.DEVICE_TYPE, deviceType);
-                            ApplicationHelper.getInstance().GAME_HAS_STARTED = true;
-                            ApplicationHelper.firstTurn = true;
+                            ApplicationHelper.getInstance().prepareNewStory();
                             mContext.startActivity(intent);
                             break;
                         default:

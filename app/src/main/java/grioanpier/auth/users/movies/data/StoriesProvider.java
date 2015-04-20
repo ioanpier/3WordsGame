@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 
 /**
  * Created by Ioannis
@@ -97,7 +98,6 @@ public class StoriesProvider extends ContentProvider {
                 );
                 break;
             }
-
 
             case STORY_SPECIFIC:
             {
@@ -192,7 +192,7 @@ public class StoriesProvider extends ContentProvider {
     }
 
     @Override
-    public int bulkInsert (Uri uri, ContentValues[] values){
+    public int bulkInsert (Uri uri, @NonNull ContentValues[]  values){
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         switch (match) {
@@ -215,9 +215,5 @@ public class StoriesProvider extends ContentProvider {
             default:
                 return super.bulkInsert(uri, values);
         }
-    }
-
-    public void test(){
-
     }
 }

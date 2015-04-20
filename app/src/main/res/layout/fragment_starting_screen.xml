@@ -4,7 +4,8 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/uni_portrait">
+    android:background="@drawable/uni"
+    >
 
     <TextView
         android:layout_width="match_parent"
@@ -13,45 +14,49 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="@color/white"
         android:text="@string/app_name"
+        android:textSize="@dimen/start_text"
         android:id="@+id/textView"
-        android:layout_marginTop="25dp"
-        android:layout_marginBottom="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/starting_padding_2"
         android:layout_weight="1"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/multiplayer"
+        android:textSize="@dimen/start_buttons"
         android:id="@+id/multiplayer_button"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/starting_padding_1"
         android:layout_weight="1"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/localgame"
+        android:textSize="@dimen/start_buttons"
         android:id="@+id/localgame_button"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/starting_padding_1"
         android:layout_weight="1"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/hall_of_stories"
+        android:textSize="@dimen/start_buttons"
         android:id="@+id/hallofstories_button"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/starting_padding_1"
         android:layout_weight="1"/>
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/about"
+        android:textSize="@dimen/start_buttons"
         android:id="@+id/about_button"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/starting_padding_1"
         android:layout_weight="1"/>
 
     <Button
@@ -59,7 +64,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Hall of Stories"
+        android:text="@string/hall_of_stories"
+        android:textSize="@dimen/start_buttons"
         android:visibility="invisible"
         android:enabled="false"
         android:layout_weight="50"

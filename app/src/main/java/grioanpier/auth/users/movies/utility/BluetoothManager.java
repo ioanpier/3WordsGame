@@ -24,7 +24,6 @@ import grioanpier.auth.users.movies.bluetooth.AcceptTaskLoader;
  */
 public class BluetoothManager extends Fragment {
 
-    private static BluetoothManager singleton;
     private static final String LOG_TAG = BluetoothManager.class.getSimpleName();
     private static final int ACCEPT_LOADER = 0;
     private static BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -57,17 +56,10 @@ public class BluetoothManager extends Fragment {
     private BroadcastReceiver mBluetoothStateReceiver = null;
     private final static int isDiscoverable = BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
 
-
-    public static BluetoothManager getInstance() {
-        if (mBluetoothAdapter == null)
-            return null;
-        else
-            return singleton;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //This is creating problems with BroadcastReceivers being leaked.
         //setRetainInstance(true);
     }
 

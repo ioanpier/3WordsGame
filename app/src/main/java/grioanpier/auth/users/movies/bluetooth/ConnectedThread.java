@@ -50,9 +50,7 @@ public class ConnectedThread extends Thread {
 
     public void run(){
         byte[] buffer = new byte[MESSAGE_SIZE];
-        StringBuilder builder;
         int numOfBytes;
-        int messageType;
 
         // Keep listening to the InputStream while connected
         while (isActive) {

@@ -72,11 +72,6 @@ public class WaitingScreenFragment extends Fragment {
     }
 
     @Override
-    public void onStart(){
-        super.onStart();
-    }
-
-    @Override
     public void onDestroy(){
         super.onDestroy();
         ApplicationHelper.getInstance().unregisterChatHandler();
@@ -101,10 +96,6 @@ public class WaitingScreenFragment extends Fragment {
     public void playersJoinedDecrement() {
         mPlayersJoined--;
         mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));
-    }
-
-    private void startGame() {
-        //TODO implement me
     }
 
     public interface StartGameButtonClicked {

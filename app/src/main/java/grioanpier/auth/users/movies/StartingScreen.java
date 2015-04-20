@@ -108,9 +108,22 @@ public class StartingScreen extends ActionBarActivity {
             });
 
             Button button_hallofstories = (Button) rootView.findViewById(R.id.hallofstories_button);
+            button_hallofstories.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(getActivity(), "Coming Soon!", Toast.LENGTH_SHORT).show();
+                }
+            });
+
 
             Button button_about = (Button) rootView.findViewById(R.id.about_button);
-
+            button_about.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getActivity(), About.class);
+                    startActivity(intent);
+                }
+            });
 
 
             return rootView;
