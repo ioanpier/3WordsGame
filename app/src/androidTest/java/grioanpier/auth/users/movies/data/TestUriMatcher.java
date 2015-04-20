@@ -20,6 +20,6 @@ public class TestUriMatcher extends AndroidTestCase {
         assertEquals("Error: The STORIES URI was matched incorrectly.",
                 testMatcher.match(TEST_STORIES_DIR), StoriesProvider.STORIES);
         assertEquals("Error: The WEATHER WITH LOCATION URI was matched incorrectly.",
-                testMatcher.match(TEST_STORIES_SPECIFIC_DIR), StoriesProvider.STORIES_SPECIFIC);
+                testMatcher.match(TEST_STORIES_SPECIFIC_DIR), StoriesProvider.STORY_SPECIFIC);
     }
 }

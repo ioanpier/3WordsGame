@@ -3,8 +3,6 @@ package grioanpier.auth.users.movies;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +21,7 @@ public class WaitingScreenFragment extends Fragment {
     private final String LOG_TAG = WaitingScreenFragment.class.getSimpleName();
 
     private int deviceType;
-    private int playersJoined = 1;
+    private int mPlayersJoined = 1;
     private static final String PLAYERS_IN_ROOM = "players in room";
     private static int PLAYERS_JOINED_STRING_ID = R.string.playersJoined;
 
@@ -44,7 +42,7 @@ public class WaitingScreenFragment extends Fragment {
 
 
         if (savedInstanceState != null) {
-            playersJoined = savedInstanceState.getInt(PLAYERS_IN_ROOM);
+            mPlayersJoined = savedInstanceState.getInt(PLAYERS_IN_ROOM);
         }
 
 
@@ -68,21 +66,14 @@ public class WaitingScreenFragment extends Fragment {
         }
 
         mPlayersJoinedTextView = (TextView) rootView.findViewById(R.id.players_joined);
-        mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, playersJoined));
+        mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));
 
         return rootView;
     }
 
-    private static CustomHandler handler;
-
-
-
     @Override
     public void onStart(){
         super.onStart();
-        handler = new CustomHandler(this);
-        ApplicationHelper.getInstance().setChatHandler(handler);
-
     }
 
     @Override
@@ -95,17 +86,21 @@ public class WaitingScreenFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(PLAYERS_IN_ROOM, playersJoined);
+        outState.putInt(PLAYERS_IN_ROOM, mPlayersJoined);
     }
 
     public void playersJoinedIncrement() {
-        playersJoined++;
-        mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, playersJoined));
+        mPlayersJoined++;
+        mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));
+    }
+
+    public void setPlayersJoined(int playersJoined){
+        mPlayersJoined = playersJoined;
     }
 
     public void playersJoinedDecrement() {
-        playersJoined--;
-        mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, playersJoined));
+        mPlayersJoined--;
+        mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));
     }
 
     private void startGame() {
@@ -114,29 +109,6 @@ public class WaitingScreenFragment extends Fragment {
 
     public interface StartGameButtonClicked {
         public void onStartGameButtonClicked();
-    }
-
-
-    private class CustomHandler extends Handler {
-
-        private WaitingScreenFragment fragment;
-
-        public CustomHandler(WaitingScreenFragment activity) {
-            super();
-            this.fragment = activity;
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case ApplicationHelper.HANDLER_IS_PLAYER:
-                    break;
-                default:
-                    System.out.println("what: "+msg.what);
-                    break;
-            }
-        }
-
     }
 
 

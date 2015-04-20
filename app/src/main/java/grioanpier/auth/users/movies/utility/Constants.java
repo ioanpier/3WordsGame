@@ -2,16 +2,13 @@ package grioanpier.auth.users.movies.utility;
 
 import java.util.UUID;
 
-import grioanpier.auth.users.movies.Utility;
-
 /**
- * Defines several constants used between {@link grioanpier.auth.users.movies.BluetoothChatService} and the UI as well as the UUID
+ * A few helpful constants
  */
 public class Constants {
 
     //UUID was acquired from UUID.randomUUID() once and is now hardcoded
     //bluetooth client and server must use the same UUID
-
     public static final String[] sUUID_STRINGS = {
             "728b4e0c-20bf-47cd-843e-016ab7075f1a",
             "85f8593d-4780-49d6-a174-df5ee4960b4a",
@@ -34,14 +31,4 @@ public class Constants {
     public static final int DEVICE_PLAYER = 1;
     public static final int DEVICE_HOST = 2;
 
-    // Message types sent from the BluetoothChatService Handler
-    public static final int MESSAGE_STATE_CHANGE = 1;
-    public static final int MESSAGE_READ = 2;
-    public static final int MESSAGE_WRITE = 3;
-    public static final int MESSAGE_DEVICE_NAME = 4;
-    public static final int MESSAGE_TOAST = 5;
-
-    // Key names received from the BluetoothChatService Handler
-    public static final String DEVICE_NAME = "device_name";
-    public static final String TOAST = "toast";
 }

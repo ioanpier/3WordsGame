@@ -69,28 +69,23 @@ public class TestDbHelper extends AndroidTestCase {
 
         // if this fails, it means that your database doesn't contain both the location entry
         // and weather entry tables
-        assertTrue("Error: Your database was created without both the location entry and weather entry tables",
+        assertTrue("Error: Your database was created without stories entry table",
                 tableNameHashSet.isEmpty());
 
         assertTrue("Error: This means that we were unable to query the database for table information.",
                 c.moveToFirst());
 
+        c.close();
+
 
     }
 
-    /*
-        Students:  Here is where you will build code to test that we can insert and query the
-        database.  We've done a lot of work for you.  You'll want to look in TestUtilities
-        where you can use the "createWeatherValues" function.  You can
-        also make use of the validateCurrentRecord function from within TestUtilities.
-     */
-    public void testWeatherTable() {
+    public void testStoriesTable() {
         // First step: Get reference to writable database
         StoriesDbHelper dbHelper = new StoriesDbHelper(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         // Create ContentValues of what you want to insert
-        // (you can use the createWeatherValues TestUtilities function if you wish)
         ContentValues storyValues = TestUtilities.createStoryValues();
         // Insert ContentValues into database and get a row ID back
         long storyRowId = db.insert(StoriesContract.StoriesEntry.TABLE_NAME, null, storyValues);
@@ -108,11 +103,9 @@ public class TestDbHelper extends AndroidTestCase {
         );
 
         // Move the cursor to a valid database row
-        assertTrue("Error: No Records returned from location query", storyCursor.moveToFirst());
+        assertTrue("Error: No Records returned from stories query", storyCursor.moveToFirst());
 
         // Validate data in resulting Cursor with the original ContentValues
-        // (you can use the validateCurrentRecord function in TestUtilities to validate the
-        // query if you like)
         TestUtilities.validateCurrentRecord("testInsertReadDb weatherEntry failed to validate",
                 storyCursor, storyValues);
 

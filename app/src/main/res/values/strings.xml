@@ -6,22 +6,27 @@
     <string name="title_activity_join_room">JoinRoom</string>
     <string name="title_activity_play">Play</string>
     <string name="title_activity_local_game">LocalGame</string>
-    <string name="title_activity_waiting_screen">WaitingScreen</string>
+    <string name="title_activity_waiting_screen">Lobby</string>
+    <string name="title_activity_bluetooth_chat">Chat Room</string>
+    <string name="title_activity_about">About</string>
     <string name="app_description">Make a story with other people
 3 words at a time</string>
+    <string name="awesome_image">Awesome Image Here</string>
 
     <!--  Bluetooth -->
     <string name="send">Send</string>
     <string name="not_connected">Not connected to a device</string>
     <string name="title_connected_to">connected to <xliff:g id="device_name">%1$s</xliff:g></string>
 
-
-
     <!-- Starting Screen -->
     <string name="multiplayer">Multiplayer</string>
     <string name="localgame">Local Game</string>
     <string name="hall_of_stories">Hall of Stories</string>
     <string name="about">About</string>
+    <!-- Game has Started Dialog -->
+    <string name="dialog_gamehasstarted_desc">You are already in a game.</string>
+    <string name="dialog_gamehasstarted_resume">Resume</string>
+    <string name="dialog_gamehasstarted_newgame">New Game</string>
 
     <!-- Local Game Screen -->
     <string name="select_host_device">Select the host\'s device</string>
@@ -34,8 +39,9 @@
 
     <!-- Waiting Screen -->
     <string name="waiting">Waiting for the host to start the game</string>
-    <string name="playersJoined">There are <xliff:g id="number" example="5">%d</xliff:g> people in the room.</string>
+    <string name="playersJoined">Waiting for the host to start the game. There are <xliff:g id="number" example="5">%d</xliff:g> people in the room.</string>
     <string name="startgame_button">Start the Game</string>
+
 
 
 </resources>

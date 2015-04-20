@@ -21,8 +21,9 @@ public class StoriesDbHelper extends SQLiteOpenHelper{
     public void onCreate(SQLiteDatabase sqLiteDatabase){
         final String SQL_CREATE_STORIES_TABLE = "CREATE TABLE " +
                 StoriesContract.StoriesEntry.TABLE_NAME + " (" +
-                StoriesContract.StoriesEntry._ID + " INTEGER PRIMARY KEY," +
-                StoriesContract.StoriesEntry.COLUMN_STORY + " TEXT NOT NULL" +
+                StoriesContract.StoriesEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+                StoriesContract.StoriesEntry.COLUMN_STORY + " TEXT NOT NULL," +
+                StoriesContract.StoriesEntry.COLUMN_HEAD + " TEXT UNIQUE NOT NULL" +
                 " );";
         sqLiteDatabase.execSQL(SQL_CREATE_STORIES_TABLE);
     }

@@ -65,6 +65,12 @@ public class BluetoothManager extends Fragment {
             return singleton;
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        //setRetainInstance(true);
+    }
+
     public static boolean isBluetoothAvailable() {
         return (BluetoothAdapter.getDefaultAdapter() != null);
     }
@@ -102,37 +108,37 @@ public class BluetoothManager extends Fragment {
         if (mBluetoothAdapter.isEnabled()) {
             if (bluetoothRequestEnableListener != null)
                 bluetoothRequestEnableListener.onEnabled();
-            //noinspection UnnecessaryReturnStatement
             return;
-        } else {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            IntentFilter filter = new IntentFilter();
-            filter.addAction(ACTION_STATE_CHANGED);
-            mBluetoothStateReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    int extra = intent.getIntExtra(EXTRA_STATE, 42);
-                    switch (extra) {
-                        case STATE_ON:
-                            Log.v(LOG_TAG, "STATE ON");
-                            if (bluetoothRequestEnableListener != null)
-                                bluetoothRequestEnableListener.onEnabled();
-                            break;
-                        case STATE_OFF:
-                            //Log.v(LOG_TAG, "STATE OFF");
-                            break;
-                        case STATE_TURNING_OFF:
-                            //Log.v(LOG_TAG, "STATE TURNING OFF");
-                            break;
-                        case STATE_TURNING_ON:
-                            //Log.v(LOG_TAG, "STATE TURNING ON");
-                            break;
-                    }
-                }
-            };
-            getActivity().registerReceiver(mBluetoothStateReceiver, filter);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH);
         }
+
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_STATE_CHANGED);
+        mBluetoothStateReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int extra = intent.getIntExtra(EXTRA_STATE, 42);
+                switch (extra) {
+                    case STATE_ON:
+                        Log.v(LOG_TAG, "STATE ON");
+                        if (bluetoothRequestEnableListener != null)
+                            bluetoothRequestEnableListener.onEnabled();
+                        break;
+                    case STATE_OFF:
+                        //Log.v(LOG_TAG, "STATE OFF");
+                        break;
+                    case STATE_TURNING_OFF:
+                        //Log.v(LOG_TAG, "STATE TURNING OFF");
+                        break;
+                    case STATE_TURNING_ON:
+                        //Log.v(LOG_TAG, "STATE TURNING ON");
+                        break;
+                }
+            }
+        };
+        getActivity().registerReceiver(mBluetoothStateReceiver, filter);
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH);
+
     }
 
     public void ensureDiscoverable() {
@@ -155,6 +161,8 @@ public class BluetoothManager extends Fragment {
         filter.addAction(ACTION_FOUND);
         filter.addAction(ACTION_DISCOVERY_STARTED);
         filter.addAction(ACTION_DISCOVERY_FINISHED);
+
+
         mDiscoveryReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 discoveryBroadcast(intent);
@@ -211,8 +219,8 @@ public class BluetoothManager extends Fragment {
                 if (bluetoothSocket != null)
                     ApplicationHelper.getInstance().addPlayerSocket(bluetoothSocket);
 
-                if (serverListenForConnectionsListener != null){
-                    if (bluetoothSocket!=null)
+                if (serverListenForConnectionsListener != null) {
+                    if (bluetoothSocket != null)
                         serverListenForConnectionsListener.onConnectionEstablished(true, bluetoothSocket.getRemoteDevice().getName());
                     else
                         serverListenForConnectionsListener.onConnectionEstablished(false, null);
@@ -233,6 +241,7 @@ public class BluetoothManager extends Fragment {
 
     @Override
     public void onDestroy() {
+        //Log.v(LOG_TAG, "onDestroy");
         super.onDestroy();
         if (mDiscoveryReceiver != null) {
             getActivity().unregisterReceiver(mDiscoveryReceiver);
@@ -258,15 +267,18 @@ public class BluetoothManager extends Fragment {
          */
         public void onEnabled();
     }
+
     public interface BluetoothRequestDiscoverableListener {
         public void onResult(boolean enabled);
     }
+
     public interface BluetoothGetAvailableDevicesListener {
         /**
          * @param device the (@link BluetoothDevice) that was found.
          */
         public void onDeviceFound(BluetoothDevice device);
     }
+
     public interface ServerListenForConnectionsListener {
         //Invoked when a connection was established. The result is saved in ApplicationHelper.hostSockets
         public void onConnectionEstablished(boolean established, String name);

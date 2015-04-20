@@ -1,7 +1,10 @@
 package grioanpier.auth.users.movies;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -19,13 +22,12 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
     private static final String LOG_TAG = WaitingScreen.class.getSimpleName();
 
-    private int deviceType;
+    private static int deviceType;
 
-    private WaitingScreenFragment waitingScreenFragment;
+    private static WaitingScreenFragment waitingScreenFragment;
     private BluetoothChatFragment bluetoothChatFragment;
     private BluetoothManager btManager;
     private static final String sBluetoothManagerFragmentTag = "bluetoothmanager";
-
 
 
     @Override
@@ -34,7 +36,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         setContentView(R.layout.activity_waiting_screen);
 
         deviceType = getIntent().getIntExtra(Constants.DEVICE_TYPE, Constants.DEVICE_SPECTATOR);
-
         //Those two fragments have been statically added inside the activity's xml!
         bluetoothChatFragment = (BluetoothChatFragment) getSupportFragmentManager().findFragmentById(R.id.chat_fragment);
         waitingScreenFragment = (WaitingScreenFragment) getSupportFragmentManager().findFragmentById(R.id.waiting_screen_fragment);
@@ -52,7 +53,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
     }
 
 
-
     @Override
     public void onStart() {
         super.onStart();
@@ -65,11 +65,12 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                 btManager.setBluetoothRequestEnableListener(new BluetoothManager.BluetoothRequestEnableListener() {
                     @Override
                     public void onResult(boolean enabled) {
-                        if (!enabled){
-                            Intent intent  = new Intent(getApplicationContext(), StartingScreen.class);
+                        if (!enabled) {
+                            Intent intent = new Intent(getApplicationContext(), StartingScreen.class);
                             startActivity(intent);
                         }
                     }
+
                     @Override
                     public void onEnabled() {
                         //Start listening for incoming connections as soon as the bluetooth is enabled.
@@ -78,6 +79,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                 });
                 btManager.ensureEnabled();
 
+                //TODO Ask once to make the device discoverable when the activity starts for the first time. Include "make discoverable" in options menu
                 //Prompt the user to make the device discoverable
                 btManager.setBluetoothRequestDiscoverableListener(new BluetoothManager.BluetoothRequestDiscoverableListener() {
                     @Override
@@ -95,7 +97,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
             case Constants.DEVICE_SPECTATOR:
                 //TODO implement me
                 //TODO I need to let the host know what that the device is a spectator. I can accomplish this by sending a first message with the type.
-                Toast.makeText(getApplicationContext(),"DEVICE_SPECTATOR CASE HASN'T BEEN IMPLEMENTED YET", Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "DEVICE_SPECTATOR CASE HASN'T BEEN IMPLEMENTED YET", Toast.LENGTH_LONG).show();
                 Log.v(LOG_TAG, "DEVICE_SPECTATOR CASE HASN'T BEEN IMPLEMENTED YET");
                 this.finish();
                 break;
@@ -106,6 +108,15 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                 this.finish();
                 break;
         }
+
+        ApplicationHelper.getInstance().setActivityHandler(mHandler);
+    }
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        ApplicationHelper.getInstance().unregisterActivityHandler();
     }
 
     @Override
@@ -130,22 +141,22 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         return super.onOptionsItemSelected(item);
     }
 
-    public void serverListenForConnections(){
+    public void serverListenForConnections() {
         btManager.setServerListenForConnectionsListener(new BluetoothManager.ServerListenForConnectionsListener() {
             @Override
             public void onConnectionEstablished(boolean established, String name) {
-                if (established){
+                if (established) {
                     Log.v(LOG_TAG, "ConnectionEstablished! with: " + name);
                     Toast.makeText(getApplicationContext(), "Connected with " + name, Toast.LENGTH_SHORT).show();
                     ApplicationHelper.removeNextAvailableUUID();
                     waitingScreenFragment.playersJoinedIncrement();
-                }else{
+                } else {
                     Toast.makeText(getApplicationContext(), "Connection NOT Established!", Toast.LENGTH_SHORT).show();
                     Log.v(LOG_TAG, "Connection NOT Established!");
                 }
 
                 UUID uuid = ApplicationHelper.getNextAvailableUUID();
-                if (uuid!=null){
+                if (uuid != null) {
                     btManager.prepareServerListenForConnections();
                     btManager.serverListenForConnections(uuid);
                 }
@@ -153,16 +164,73 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         });
 
         UUID uuid = ApplicationHelper.getNextAvailableUUID();
-        if (uuid!=null)
+        if (uuid != null)
             btManager.serverListenForConnections(uuid);
     }
 
 
     @Override
     public void onStartGameButtonClicked() {
-                Log.v(LOG_TAG, "start game button clicked");
+        //When the game starts, assign a random name to the story. Use a randomUUID :D
+        ApplicationHelper.getInstance().prepareNewStory();
+        String randomUUID = UUID.randomUUID().toString();
+        Log.v(LOG_TAG, "randomUUID headStory is " + randomUUID);
+        ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.START_GAME)+ randomUUID, ApplicationHelper.ACTIVITY_CODE);
     }
 
+
+    private ActivityHandler mHandler = new ActivityHandler(this);
+
+    public static class ActivityHandler extends Handler {
+
+        Context mContext;
+
+        protected ActivityHandler(Context context) {
+            super();
+            mContext = context;
+        }
+
+        @Override
+        public synchronized void handleMessage(Message msg) {
+            switch (msg.what) {
+                case ApplicationHelper.PLAYER_CONNECTED:
+                    if (deviceType != Constants.DEVICE_HOST)
+                        waitingScreenFragment.playersJoinedIncrement();
+                    break;
+                case ApplicationHelper.PLAYER_DISCONNECTED:
+                    Toast.makeText(mContext, msg.obj + " disconnected", Toast.LENGTH_SHORT).show();
+                    waitingScreenFragment.playersJoinedDecrement();
+                    break;
+                case ApplicationHelper.ACTIVITY_CODE:
+                    String message = (String) msg.obj;
+                    Log.v(LOG_TAG, "ACTIVITY_CODE case: " + message);
+                    int mySwitch = message.charAt(0)-48;
+                    switch (mySwitch) {
+                        //Receive the code to start the game
+                        case ApplicationHelper.START_GAME:
+                            //Initialize the Story Head
+                            ApplicationHelper.STORY_HEAD = message.substring(1, message.length());
+                            Log.v(LOG_TAG, "STORY HEAD IS " + ApplicationHelper.STORY_HEAD);
+
+                            //Start the Play activity
+                            Intent intent = new Intent(mContext, Play.class);
+                            intent.putExtra(Constants.DEVICE_TYPE, deviceType);
+                            ApplicationHelper.getInstance().GAME_HAS_STARTED = true;
+                            ApplicationHelper.firstTurn = true;
+                            mContext.startActivity(intent);
+                            break;
+                        default:
+                            Log.v(LOG_TAG, "other");
+                            Log.v(LOG_TAG, "other, the switch is " + mySwitch);
+                            break;
+
+                    }
+                    break;
+                default:
+                    Log.v(LOG_TAG, "switch: " + msg.what);
+            }
+        }
+    }
 
 
 }//Activity

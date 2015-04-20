@@ -15,7 +15,6 @@ public class TestStoriesContract extends AndroidTestCase {
     public void testBuildStoriesSpecific() {
         Uri storySpecificUri = StoriesContract.StoriesEntry.buildStoriesSpecific(TEST_STORY);
         Log.v(LOG_TAG, storySpecificUri.toString());
-        System.out.println(storySpecificUri.toString());
 
         assertNotNull("Error: Null Uri returned.  You must fill-in buildWeatherLocation in " +
                         "WeatherContract.",

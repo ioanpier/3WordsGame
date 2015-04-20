@@ -17,39 +17,45 @@ public class StoriesProvider extends ContentProvider {
     private StoriesDbHelper mOpenHelper;
 
     static final int STORIES = 100;
-    static final int STORIES_SPECIFIC = 101;
+    static final int STORY_SPECIFIC = 101;
 
     private static final SQLiteQueryBuilder sStoryQueryBuilder;
-    static {
+
+    static{
         sStoryQueryBuilder = new SQLiteQueryBuilder();
+        sStoryQueryBuilder.setTables(StoriesContract.StoriesEntry.TABLE_NAME);
     }
 
-    //stories.story = ?
+    /*
+        From Udacity's Developing Android Apps course. If I had a join, I would declare it here like so
+
+        sWeatherByLocationSettingQueryBuilder.setTables(
+                WeatherContract.WeatherEntry.TABLE_NAME + " INNER JOIN " +
+                        WeatherContract.LocationEntry.TABLE_NAME +
+                        " ON " + WeatherContract.WeatherEntry.TABLE_NAME +
+                        "." + WeatherContract.WeatherEntry.COLUMN_LOC_KEY +
+                        " = " + WeatherContract.LocationEntry.TABLE_NAME +
+                        "." + WeatherContract.LocationEntry._ID);
+
+        //weather INNER JOIN location ON weather.location_id = location._id
+        This means to create an inner join between the weather and location tables
+        The weather.location_id (a column in the weather table)
+        Should point to the location._id (the _id column in the location table)
+
+
+     */
+
+    //stories.head = ?   This asks for a specific story
     private static final String sStorySelection =
             StoriesContract.StoriesEntry.TABLE_NAME +
-                    "." + StoriesContract.StoriesEntry.COLUMN_STORY + " = ? ";
-
-    private Cursor getStorySpecific(Uri uri, String[] projection, String sortOrder) {
-        String storySpecific = StoriesContract.StoriesEntry.getStorySpecificFromUri(uri);
-        String[] selectionArgs = new String[]{storySpecific};
-        String selection = sStorySelection;
-
-        return sStoryQueryBuilder.query(mOpenHelper.getReadableDatabase(),
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                sortOrder
-        );
-    }
+                    "." + StoriesContract.StoriesEntry.COLUMN_HEAD + " = ? ";
 
     static UriMatcher buildUriMatcher() {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         final String authority = StoriesContract.CONTENT_AUTHORITY;
 
         matcher.addURI(authority, StoriesContract.PATH_STORIES, STORIES);
-        matcher.addURI(authority, StoriesContract.PATH_STORIES + "/*", STORIES_SPECIFIC);
+        matcher.addURI(authority, StoriesContract.PATH_STORIES + "/*", STORY_SPECIFIC);
 
         return matcher;
     }
@@ -67,7 +73,7 @@ public class StoriesProvider extends ContentProvider {
         switch(match){
             case STORIES:
                 return StoriesContract.StoriesEntry.CONTENT_TYPE;
-            case STORIES_SPECIFIC:
+            case STORY_SPECIFIC:
                 return StoriesContract.StoriesEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
@@ -89,12 +95,22 @@ public class StoriesProvider extends ContentProvider {
                         null,
                         sortOrder
                 );
+                break;
             }
-            break;
 
-            case STORIES_SPECIFIC:
+
+            case STORY_SPECIFIC:
             {
-                return getStorySpecific(uri, projection, sortOrder);
+                String storySpecific = StoriesContract.StoriesEntry.getStorySpecificFromUri(uri);
+                retCursor = sStoryQueryBuilder.query(mOpenHelper.getReadableDatabase(),
+                        projection,
+                        sStorySelection,
+                        new String[]{storySpecific},
+                        null,
+                        null,
+                        null
+                );
+                break;
             }
 
             default:
@@ -103,8 +119,6 @@ public class StoriesProvider extends ContentProvider {
         retCursor.setNotificationUri(getContext().getContentResolver(), uri);
         return retCursor;
     }
-
-
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
@@ -127,6 +141,7 @@ public class StoriesProvider extends ContentProvider {
         }
 
         getContext().getContentResolver().notifyChange(uri, null);
+
         return returnUri;
     }
 
@@ -200,5 +215,9 @@ public class StoriesProvider extends ContentProvider {
             default:
                 return super.bulkInsert(uri, values);
         }
+    }
+
+    public void test(){
+
     }
 }

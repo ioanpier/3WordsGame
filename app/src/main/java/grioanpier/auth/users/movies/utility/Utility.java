@@ -1,4 +1,4 @@
-package grioanpier.auth.users.movies;
+package grioanpier.auth.users.movies.utility;
 
 import java.util.UUID;
 

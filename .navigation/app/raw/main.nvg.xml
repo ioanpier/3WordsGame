@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<navigationModel
+  ns = "http://schemas.android.com?import=com.android.tools.idea.editors.navigation.model.*">
+  <locations  
+    class = "java.util.ArrayList">
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
+        className = "grioanpier.auth.users.movies.MainActivity"/>
+      <point      
+        x = "500"      
+        y = "100"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
+        className = "grioanpier.auth.users.movies.MainActivity"/>
+      <point      
+        x = "2536"      
+        y = "100"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
+        className = "grioanpier.auth.users.movies.LocalGame"/>
+      <point      
+        x = "484"      
+        y = "4386"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
+        className = "grioanpier.auth.users.movies.LocalGame"/>
+      <point      
+        x = "2529"      
+        y = "4386"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
+        className = "grioanpier.auth.users.movies.StartingScreen"/>
+      <point      
+        x = "500"      
+        y = "10840"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
+        className = "grioanpier.auth.users.movies.StartingScreen"/>
+      <point      
+        x = "2536"      
+        y = "10840"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
+        className = "grioanpier.auth.users.movies.WaitingScreen"/>
+      <point      
+        x = "2536"      
+        y = "12988"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
+        className = "grioanpier.auth.users.movies.WaitingScreen"/>
+      <point      
+        x = "500"      
+        y = "12988"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
+        className = "grioanpier.auth.users.movies.Play"/>
+      <point      
+        x = "4251"      
+        y = "403"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
+        className = "grioanpier.auth.users.movies.Play"/>
+      <point      
+        x = "6296"      
+        y = "403"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
+        className = "grioanpier.auth.users.movies.BluetoothChat"/>
+      <point      
+        x = "500"      
+        y = "6544"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
+        className = "grioanpier.auth.users.movies.BluetoothChat"/>
+      <point      
+        x = "2536"      
+        y = "6544"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
+        className = "grioanpier.auth.users.movies.About"/>
+      <point      
+        x = "500"      
+        y = "8692"/>
+    </statePointEntry>
+    <statePointEntry>
+      <state      
+        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
+        className = "grioanpier.auth.users.movies.About"/>
+      <point      
+        x = "2536"      
+        y = "8692"/>
+    </statePointEntry>
+  </locations>
+</navigationModel>

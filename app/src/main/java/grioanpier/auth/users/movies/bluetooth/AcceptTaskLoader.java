@@ -11,7 +11,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 /**
- * Created by Ioannis on 13/4/2015.
+ * Attempts to connect to the specified device with the provided UUID.
+ * Returns the {@link android.bluetooth.BluetoothSocket} (null if it failed).
  */
 public class AcceptTaskLoader extends AsyncTaskLoader<BluetoothSocket> {
 
@@ -46,7 +47,7 @@ public class AcceptTaskLoader extends AsyncTaskLoader<BluetoothSocket> {
 
     @Override
     public BluetoothSocket loadInBackground() {
-        System.out.println("loadInBackground");
+        Log.v(LOG_TAG, "loadInBackground");
         try {
             Log.v(LOG_TAG, "getting the server socket");
             mBtServerSocket = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(mUUID.toString(), mUUID);
@@ -70,14 +71,17 @@ public class AcceptTaskLoader extends AsyncTaskLoader<BluetoothSocket> {
 
     @Override
     public void deliverResult(final BluetoothSocket socket) {
-//        Log.v("AppLog", "deliverResult");
+        Log.v(LOG_TAG, "deliverResult");
         if (isReset()) {
             // An async query came in while the loader is stopped.  We don't need the result.
             if (socket != null) {
+                Log.v(LOG_TAG, "deliverResult | socket!=null");
                 onReleaseResources(socket);
             }
         }
-        BluetoothSocket oldData = mBtSocket;
+
+        //The {@link AcceptTaskLoader} is for accepting incoming bluetooth connections, not for managing them.
+        //Therefor we ignore the previous value of the {mBtSocket}
         mBtSocket = socket;
 
         if (isStarted()) {
@@ -86,31 +90,28 @@ public class AcceptTaskLoader extends AsyncTaskLoader<BluetoothSocket> {
             super.deliverResult(socket);
         }
 
-        // At this point we can release the resources associated with
-        // 'oldData' if needed; now that the new result is delivered we
-        // know that it is no longer in use.
-        if (oldData != null) {
-            onReleaseResources(oldData);
-        }
+
     }
 
     protected void onReleaseResources(BluetoothSocket socket) {
-        Log.v("AppLog", "onReleaseResources");
+        Log.v(LOG_TAG, "onReleaseResources");
         try {
-            if (socket != null)
+            if (socket != null){
+                Log.v(LOG_TAG, "closing socket: "+socket.getRemoteDevice().getName());
                 socket.close();
+            }
+
         } catch (IOException e) {
         }
     }
 
     @Override
     protected void onReset() {
+
         super.onReset();
         // Ensure the loader is stopped
         onStopLoading();
-        // At this point we can release the resources associated with 'mBtSocket' if needed.
         if (mBtSocket != null) {
-            onReleaseResources(mBtSocket);
             mBtSocket = null;
         }
     }

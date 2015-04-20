@@ -22,11 +22,9 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import grioanpier.auth.users.movies.bluetooth.ConnectTaskLoader;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
@@ -41,15 +39,13 @@ public class LocalGame extends ActionBarActivity {
     private static final String sPlaceholderFragmentTag = "localplaceholder";
     private static final int SOURCE_BUTTON_JOIN = 0;
     private static final int SOURCE_BUTTON_SPECTATE = 1;
-    private static boolean restored;
+    private boolean restored;
 
     private BluetoothManager btManager;
     private PlaceholderFragment frag;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        System.out.println("onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_local_game);
 
@@ -103,8 +99,6 @@ public class LocalGame extends ActionBarActivity {
         Log.v(LOG_TAG, "onStart");
         super.onStart();
 
-
-        System.out.println(Boolean.toString(restored));
         if (BluetoothManager.isBluetoothEnabled()){
             if (!restored)
                 //If this is the first time running, set the Paired devices.
@@ -139,12 +133,20 @@ public class LocalGame extends ActionBarActivity {
 
         //The {@link BluetoothManager} starts the discovery only if it isn't already discovering.
         btManager.getAvailableDevices();
+
+        //TODO remove. These are for debugging purposes.
+        ApplicationHelper app = ApplicationHelper.getInstance();
+        Log.v(LOG_TAG, "player sockets:");
+        for (BluetoothSocket socket: app.getPlayerSockets())
+            Log.v(LOG_TAG, socket.getRemoteDevice().getName());
+        System.out.println("host Socket:");
+        if (app.getHostSocket()!=null)
+            Log.v(LOG_TAG, app.getHostSocket().getRemoteDevice().getName());
     }
 
     @Override
     public void onStop() {
         super.onStop();
-
         //Make sure to cancel the bluetooth discovery.
         BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
     }
@@ -173,11 +175,20 @@ public class LocalGame extends ActionBarActivity {
         private View selectedView;
         private String selectedMAC;
 
-        ArrayAdapter<String> devicesAdapter = null;
-        ArrayList<String> devicesList = new ArrayList<>();
+        private ArrayAdapter<String> devicesAdapter = null;
+        private ArrayList<String> devicesList = new ArrayList<>();
         // HashSet to back up devicesList to prevent duplicates.
-        HashSet<String> devicesSet = new HashSet<>();
-        int devicesNumber = 0;
+        private HashSet<String> devicesSet = new HashSet<>();
+        private int devicesNumber = 0;
+
+        private final static String LOADER_STATE = "loader state";
+        private int connectLoaderState = STATE_NONE;
+        private static int STATE_NONE = 0;
+        private static int STATE_RUNNING = 1;
+        private static int STATE_FINISHED = 2;
+
+        private static int button_source;
+        private static BluetoothDevice connectedDevice;
 
         public PlaceholderFragment() {
         }
@@ -196,20 +207,15 @@ public class LocalGame extends ActionBarActivity {
                 bundle.putStringArrayList(bundleDeviceList, devicesList);
             if (prev != null)
                 bundle.putString(prevDeviceToAttemptToConnect, prev.getAddress());
+            bundle.putInt(LOADER_STATE, connectLoaderState);
         }
+
+
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setHasOptionsMenu(true);
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.local_game_screen, container, false);
-            //call findViewById for the join and spectate buttons and assign them their respective onClickListeners
-            listView = (ListView) rootView.findViewById(R.id.pairedDevicesList);
 
             if (savedInstanceState != null) {
                 devicesList = savedInstanceState.getStringArrayList(bundleDeviceList);
@@ -219,7 +225,30 @@ public class LocalGame extends ActionBarActivity {
                 String prevTemp = savedInstanceState.getString(prevDeviceToAttemptToConnect);
                 if (prevTemp != null)
                     prev = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(prevTemp);
+
+                connectLoaderState = savedInstanceState.getInt(LOADER_STATE);
             }
+        }
+
+        @Override
+        public void onResume(){
+            Log.v(LOG_TAG, "onResume");
+            super.onResume();
+            if (connectLoaderState!=STATE_NONE){
+                Log.v(LOG_TAG, "if statement");
+                getLoaderManager().initLoader(CONNECT_LOADER, null, connectLoader );
+            }
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_local_game_screen, container, false);
+            //call findViewById for the join and spectate buttons and assign them their respective onClickListeners
+            listView = (ListView) rootView.findViewById(R.id.pairedDevicesList);
+
+
+
 
             devicesAdapter = new ArrayAdapter<>(getActivity(),
                     android.R.layout.simple_list_item_1,
@@ -278,15 +307,15 @@ public class LocalGame extends ActionBarActivity {
             join_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //connect(selectedMAC, SOURCE_BUTTON_JOIN);
-                    otherconnect(MY_MAC);
+                    connect(selectedMAC, SOURCE_BUTTON_JOIN);
+                    //otherconnect(MY_MAC);
                 }
             });
             host_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //host();
-                    otherhost();
+                    host();
+                    //otherhost();
                 }
             });
             refresh_button.setOnClickListener(new View.OnClickListener() {
@@ -296,11 +325,10 @@ public class LocalGame extends ActionBarActivity {
                 }
             });
 
-
             return rootView;
         }
 
-
+/*
         public void otherconnect(String MACaddress){
             if (MACaddress == null)
                 return;
@@ -336,17 +364,20 @@ public class LocalGame extends ActionBarActivity {
 
         public void otherhost(){
             UUID uuid;
+
             boolean connected = false;
             while (!connected){
                 uuid = ApplicationHelper.getNextAvailableUUID();
                 if (uuid == null){
-                    Toast.makeText(getActivity(), "uuids depleted", Toast.LENGTH_SHORT);
+                    Toast.makeText(getActivity(), "uuids depleted", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 try {
-
+                    Toast.makeText(getActivity(), "Listening: " + uuid.toString(), Toast.LENGTH_LONG).show();
                     BluetoothSocket socket = BluetoothAdapter.getDefaultAdapter().listenUsingRfcommWithServiceRecord(uuid.toString(), uuid).accept();
-                    Toast.makeText(getActivity(), "Hosted!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), "Hosted! " + socket.getRemoteDevice().getName(), Toast.LENGTH_LONG).show();
+                    ApplicationHelper.removeNextAvailableUUID();
+                    connected=true;
                     socket.close();
                 } catch (IOException e) {
                     Toast.makeText(getActivity(), "Hosting ERROR", Toast.LENGTH_LONG).show();
@@ -355,9 +386,9 @@ public class LocalGame extends ActionBarActivity {
             }
 
         }
-
+*/
         public void otherrefresh(){
-            ApplicationHelper.restoreUUIDs();
+            ApplicationHelper.getInstance().prepareNewGame();
         }
 
         //The previous BluetoothDevice that we tried to connect to.
@@ -374,9 +405,27 @@ public class LocalGame extends ActionBarActivity {
             if (MACaddress == null)
                 return;
 
+            String hostAddress = ApplicationHelper.getInstance().getHostAddress();
+            if (hostAddress==null)
+                Log.v(LOG_TAG, "hostAddress was null");
+            else if (MACaddress.equals(hostAddress)){
+                //TODO make sure if the hostDisconnectes, that the hostAddress is also nulled.
+                Toast.makeText(getActivity(), "Already connected", Toast.LENGTH_SHORT).show();
+                switch (source){
+                    case SOURCE_BUTTON_JOIN:
+                        join();
+                        return;
+                    case SOURCE_BUTTON_SPECTATE:
+                        spectate();
+                        return;
+                }
+            }else{
+                System.out.println(MACaddress + " VS " + hostAddress);
+            }
+
             final BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(MACaddress);
 
-            //TODO implemet για όλες τις συσκευές (μήπως να το αφαιρέσω κι ας κάνουν ο,τι θέλουν?)
+            //TODO implement για όλες τις συσκευές (μήπως να το αφαιρέσω κι ας κάνουν ο,τι θέλουν?)
             if (prev == null) {
                 prev = device;
             } else if (!prev.getAddress().equals(device.getAddress())) {
@@ -387,78 +436,86 @@ public class LocalGame extends ActionBarActivity {
                 prev = device;
             } else {
                 //The loader has already run for this device.
-                return;
+                //return;
             }
 
-
-            getLoaderManager().initLoader(CONNECT_LOADER, null, new LoaderManager.LoaderCallbacks<BluetoothSocket>() {
-                @Override
-                public Loader<BluetoothSocket> onCreateLoader(int id, Bundle args) {
-                    Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onCreateLoader");
-                    return new ConnectTaskLoader(getActivity(), device, Constants.sUUIDs);
-                }
-
-                @Override
-                //Attempts to connect to the device. If successful, calls spectate(), join() respectively
-                public void onLoadFinished(Loader<BluetoothSocket> loader, BluetoothSocket btSocket) {
-                    Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onLoadFinished");
-                    if (btSocket != null) {
-                        String name = btSocket.getRemoteDevice().getName();
-                        Toast.makeText(getActivity(), "Connected to " + name, Toast.LENGTH_LONG).show();
-                        ApplicationHelper.getInstance().setHostSocket(btSocket);
-                        switch (source){
-                            case SOURCE_BUTTON_JOIN:
-                                join();
-                                break;
-                            case SOURCE_BUTTON_SPECTATE:
-                                spectate();
-                                break;
-                        }
-                    } else {
-                        Toast.makeText(getActivity(), "Couldn't connect to the specified device", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                @Override
-                public void onLoaderReset(Loader<BluetoothSocket> loader) {
-                    Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onLoaderReset");
-                }
-            });
+            connectLoaderState = STATE_RUNNING;
+            button_source = source;
+            connectedDevice = device;
+            getLoaderManager().initLoader(CONNECT_LOADER, null, connectLoader );
 
         }
 
+
+
+        LoaderManager.LoaderCallbacks<BluetoothSocket> connectLoader = new LoaderManager.LoaderCallbacks<BluetoothSocket>() {
+            @Override
+            public Loader<BluetoothSocket> onCreateLoader(int id, Bundle args) {
+                Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onCreateLoader");
+                return new ConnectTaskLoader(getActivity(), connectedDevice, Constants.sUUIDs);
+            }
+
+            @Override
+            //Attempts to connect to the device. If successful, calls spectate(), join() respectively
+            public void onLoadFinished(Loader<BluetoothSocket> loader, BluetoothSocket btSocket) {
+                connectLoaderState = STATE_NONE;
+                Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onLoadFinished");
+                if (btSocket != null) {
+                    String name = btSocket.getRemoteDevice().getName();
+                    Toast.makeText(getActivity(), "Connected to " + name, Toast.LENGTH_LONG).show();
+                    ApplicationHelper.getInstance().setHostSocket(btSocket);
+                    switch (button_source){
+                        case SOURCE_BUTTON_JOIN:
+                            join();
+                            break;
+                        case SOURCE_BUTTON_SPECTATE:
+                            spectate();
+                            break;
+                    }
+                } else {
+                    Toast.makeText(getActivity(), "Couldn't connect to the specified device", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onLoaderReset(Loader<BluetoothSocket> loader) {
+                Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onLoaderReset");
+            }
+        };
+
+
         private void spectate() {
             Intent intent = new Intent(getActivity(), WaitingScreen.class);
+            ApplicationHelper.getInstance().isHost=false;
             intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_SPECTATOR);
             startActivity(intent);
         }
 
         private void join() {
             Intent intent = new Intent(getActivity(), WaitingScreen.class);
+            ApplicationHelper.getInstance().isHost=false;
             intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_PLAYER);
             startActivity(intent);
         }
 
         private void host() {
             cancelDiscovery();
-            ApplicationHelper.restoreUUIDs();
+            //Since the user wants to become a host, clear the host socket, if there is one.
+
             Intent intent = new Intent(getActivity(), WaitingScreen.class);
+            ApplicationHelper.getInstance().isHost=true;
             intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_HOST);
             startActivity(intent);
         }
-
 
         private void cancelDiscovery() {
             BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
         }
 
-
         public void setDevicesList(Set<BluetoothDevice> list) {
-            System.out.println("CALLED");
             String string;
             for (BluetoothDevice device : list) {
                 string = device.getName() + "\n" + device.getAddress();
-                System.out.println("added");
                 if (devicesSet.add(string)) {
                     devicesAdapter.add(string);
                     devicesNumber++;

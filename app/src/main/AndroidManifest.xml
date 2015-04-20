@@ -37,12 +37,6 @@
                 android:value="grioanpier.auth.users.movies.StartingScreen" />
         </activity>
 
-        <provider
-            android:name=".data.StoriesProvider"
-            android:authorities="grioanpier.auth.users.movies"
-            android:enabled="true"
-            android:exported="false" />
-
         <activity
             android:name=".WaitingScreen"
             android:label="@string/title_activity_waiting_screen"
@@ -51,6 +45,28 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="grioanpier.auth.users.movies.LocalGame" />
         </activity>
+        <activity
+            android:name=".BluetoothChat"
+            android:label="@string/title_activity_bluetooth_chat"
+            android:parentActivityName=".Play" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="grioanpier.auth.users.movies.Play" />
+        </activity>
+        <activity
+            android:name=".About"
+            android:label="@string/title_activity_about"
+            android:parentActivityName=".StartingScreen" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="grioanpier.auth.users.movies.StartingScreen" />
+        </activity>
+
+        <provider
+            android:name=".data.StoriesProvider"
+            android:authorities="grioanpier.auth.users.movies"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>
