@@ -88,11 +88,10 @@ public class ApplicationHelper extends Application {
         debug_closePlayerSockets();
         debug_closeHostSocket();
 
-        isHost=false;
-        GAME_HAS_STARTED=false;
-        whoIsPlaying=-1;
-        myTurn=false;
-
+        isHost = false;
+        GAME_HAS_STARTED = false;
+        whoIsPlaying = -1;
+        myTurn = false;
 
 
     }
@@ -123,7 +122,7 @@ public class ApplicationHelper extends Application {
     /**
      * Called when a player leaves and ensures the correct player is up next.
      */
-    public void ensureGameIsPlaying(){
+    public void ensureGameIsPlaying() {
         //TODO do this correctly.
         //though this should work. If the player who left was lower than the player playing now, it will tell the same player to play.
         //If the player who left was also his turn,
@@ -314,7 +313,7 @@ public class ApplicationHelper extends Application {
     }
 
     public void write(String message, int source, int threadPos) {
-        synchronized (Write_Lock){
+        synchronized (Write_Lock) {
             StringBuilder builder = new StringBuilder();
 
 
@@ -338,17 +337,16 @@ public class ApplicationHelper extends Application {
             }
 
 
-
             Collection<ConnectedThread> col = connectedThreads.values();
-            if (! col.isEmpty()){
+            if (!col.isEmpty()) {
                 ConnectedThread thread = (ConnectedThread) col.toArray()[threadPos];
-                if (thread!=null){
+                if (thread != null) {
                     Log.v(LOG_TAG, "Notify a player (someone else)");
                     thread.write(buffer);
-                }else{
+                } else {
                     Log.v(LOG_TAG, "Thread was null!");
                 }
-            }else{
+            } else {
                 Log.v(LOG_TAG, "Collection was empty!");
             }
         }
@@ -420,10 +418,9 @@ public class ApplicationHelper extends Application {
                         case ACTIVITY_CODE:
 
                             Log.v(LOG_TAG, activityHandler.getClass().getCanonicalName());
-                            if (activityHandler != null){
+                            if (activityHandler != null) {
                                 activityHandler.obtainMessage(ACTIVITY_CODE, builder.substring(1, builder.length())).sendToTarget();
-                            }
-                            else {
+                            } else {
                                 Log.v(LOG_TAG, "activityHandler was null");
                             }
                             break;
@@ -466,7 +463,7 @@ public class ApplicationHelper extends Application {
                         mContext.startActivity(intent);
                     }
 
-                    if (chatHandler == null) {
+                    if (activityHandler == null) {
                         Log.v(LOG_TAG, "activityHandler was null!");
                         return;
                     }

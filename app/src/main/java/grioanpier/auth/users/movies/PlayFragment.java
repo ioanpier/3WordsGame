@@ -59,7 +59,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
                 android.R.layout.simple_list_item_1,
                 listItems);
 
-        Log.v(LOG_TAG, "intializing story loader");
+        Log.v(LOG_TAG, "initializing story loader");
         //getLoaderManager().initLoader(STORY_LOADER, null, this);
 
         editText = (EditText) rootView.findViewById(R.id.main_edittext);
