@@ -24,9 +24,7 @@ public class Constants {
 
     public static final UUID[] sUUIDs = Utility.getUUIDsFromStrings(sUUID_STRINGS);
 
-    // Intent Extra to use when starting WaitingScreen.
-    // It can be host, player, spectator
-    public static final String DEVICE_TYPE = "DEVICE_TYPE";
+    //The available device types
     public static final int DEVICE_SPECTATOR = 0;
     public static final int DEVICE_PLAYER = 1;
     public static final int DEVICE_HOST = 2;

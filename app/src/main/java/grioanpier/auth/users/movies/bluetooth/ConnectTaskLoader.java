@@ -47,10 +47,13 @@ public class ConnectTaskLoader extends android.support.v4.content.AsyncTaskLoade
         // At this point we can release the resources associated with
         // 'oldData' if needed; now that the new result is delivered we
         // know that it is no longer in use.
-        if (oldData != null) {
-            Log.v(LOG_TAG, "deliverResult | oldData!=null");
-            onReleaseResources(oldData);
-        }
+
+        //Whenever the user went back to LocalGame screen while the game was playing, these lines resulted in disconencting the
+        //player from the host.
+        //if (oldData != null) {
+        //    Log.v(LOG_TAG, "deliverResult | oldData!=null");
+        //    onReleaseResources(oldData);
+        //}
     }
 
     @Override

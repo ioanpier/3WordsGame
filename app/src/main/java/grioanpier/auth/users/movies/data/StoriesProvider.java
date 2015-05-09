@@ -132,7 +132,7 @@ public class StoriesProvider extends ContentProvider {
                 if (id > 0)
                     returnUri = StoriesContract.StoriesEntry.buildStoriesUri(id);
                 else
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                    throw new android.database.SQLException("Failed to insert row into " + uri + " with returned id=" + id);
                 break;
             }
 

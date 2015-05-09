@@ -10,8 +10,8 @@
     <dimen name="start_game">15sp</dimen>
 
     <!-- Starting Screen -->
-    <dimen name="starting_padding_1">10dp</dimen>
-    <dimen name="starting_padding_2">15dp</dimen>
+    <dimen name="starting_padding_1">25dp</dimen>
+    <dimen name="starting_padding_2">25dp</dimen>
     <dimen name="start_text">30sp</dimen>
     <dimen name="start_buttons">15sp</dimen>
 

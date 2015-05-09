@@ -35,7 +35,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_waiting_screen);
 
-        deviceType = getIntent().getIntExtra(Constants.DEVICE_TYPE, Constants.DEVICE_SPECTATOR);
+        deviceType = ApplicationHelper.getInstance().DEVICE_TYPE;
         //Those two fragments have been statically added inside the activity's xml!
         bluetoothChatFragment = (BluetoothChatFragment) getSupportFragmentManager().findFragmentById(R.id.chat_fragment);
         waitingScreenFragment = (WaitingScreenFragment) getSupportFragmentManager().findFragmentById(R.id.waiting_screen_fragment);
@@ -198,7 +198,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
                             //Start the Play activity
                             Intent intent = new Intent(mContext, Play.class);
-                            intent.putExtra(Constants.DEVICE_TYPE, deviceType);
                             ApplicationHelper.getInstance().prepareNewStory();
                             mContext.startActivity(intent);
                             break;

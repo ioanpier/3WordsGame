@@ -1,7 +1,6 @@
 
 package grioanpier.auth.users.movies;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -37,9 +36,7 @@ public class WaitingScreenFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Intent intent = getActivity().getIntent();
-        deviceType = intent.getIntExtra(Constants.DEVICE_TYPE, Constants.DEVICE_SPECTATOR);
-
+        deviceType = ApplicationHelper.getInstance().DEVICE_TYPE;
 
         if (savedInstanceState != null) {
             mPlayersJoined = savedInstanceState.getInt(PLAYERS_IN_ROOM);

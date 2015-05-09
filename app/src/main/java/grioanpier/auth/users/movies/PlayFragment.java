@@ -36,6 +36,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
 
     private static String LOG_TAG = PlayFragment.class.getSimpleName();
     private ArrayList<String> listItems = new ArrayList<>();
+    private final static String STORY = "story so far";
     private static ArrayAdapter<String> adapter;
     private EditText editText;
     private ListView listView;
@@ -53,14 +54,25 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
 
         listView = (ListView) rootView.findViewById(R.id.story_listview);
 
+        if (savedInstanceState != null)
+            listItems = savedInstanceState.getStringArrayList(STORY);
+        else if (!ApplicationHelper.getInstance().story.isEmpty()){
+            listItems = ApplicationHelper.getInstance().story;
+        }
+
         adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_list_item_1,
                 listItems);
 
+        listView.setAdapter(adapter);
+
+        for (String s : listItems) {
+            Log.v(LOG_TAG, s);
+        }
+
         Log.v(LOG_TAG, "initializing story loader");
         //getLoaderManager().initLoader(STORY_LOADER, null, this);
-
-        editText = (EditText) rootView.findViewById(R.id.main_edittext);
+        editText = (EditText) rootView.findViewById(R.id.story_edittext);
 
         //Sets the soft keyboard to be hidden when the app starts.
         //getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
@@ -105,6 +117,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
         debug.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 System.out.println("debug button on click!");
                 ApplicationHelper app = ApplicationHelper.getInstance();
                 Log.v("DEBUG BUTTON", Boolean.toString(app.isHost));
@@ -114,13 +127,15 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
                 //Log.v("DEBUG BUTTON", );
 
                 new AlertDialog.Builder(getActivity())
-                        .setMessage("Enable Edit Text?")
-                        .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                        .setMessage("Steal a turn?")
+                        .setPositiveButton("Steal!", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 editText.setFocusableInTouchMode(true);
                                 editText.setEnabled(true);
                             }
                         }).show();
+
+
 
 
             }
@@ -136,9 +151,23 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
     }
 
     @Override
+    public void onSaveInstanceState(Bundle out) {
+        super.onSaveInstanceState(out);
+        out.putStringArrayList(STORY, listItems);
+
+    }
+
+    @Override
     public void onStop() {
         super.onStop();
         ApplicationHelper.getInstance().unregisterStoryHandler();
+
+
+        /*StringBuilder builder = new StringBuilder();
+        for (int i=0; i<adapter.getCount(); i++)
+            builder.append(adapter.getItem(i)).append(" ");
+
+        //new StoryInitialAsyncTask(getActivity()).execute(builder.toString(), ApplicationHelper.STORY_HEAD);*/
     }
 
     private int countWords(String s) {
@@ -174,19 +203,8 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
             hideKeyboard();
             ApplicationHelper.myTurn = false;
 
-            if (ApplicationHelper.getInstance().isHost && ApplicationHelper.firstTurn) {
-                Log.v(LOG_TAG, "I am the host and this is the first turn.");
-                Log.v(LOG_TAG, "write message with STORY_INITIAL");
-                Log.v(LOG_TAG, "story is: " + message);
-                ApplicationHelper.getInstance().write(ApplicationHelper.STORY_INITIAL + message, ApplicationHelper.STORY);
-                //STORY_INITIAL means the received message will be inserted in the database.
-            } else {
-                Log.v(LOG_TAG, "I am not host or this isn't my first turn");
-                Log.v(LOG_TAG, "either way, write message with STORY");
-                Log.v(LOG_TAG, "story is: " + message);
-                ApplicationHelper.getInstance().write(ApplicationHelper.STORY + message, ApplicationHelper.STORY);
-                //STORY means the received message will be used to update the database additively.
-            }
+            ApplicationHelper.getInstance().write(message, ApplicationHelper.STORY);
+
         }
     }
 
@@ -276,28 +294,12 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case ApplicationHelper.STORY:
-                    Log.v(LOG_TAG, "message object is "+msg.obj);
-                    adapter.add((String) msg.obj);
-                    Log.v(LOG_TAG, "story handler switch is " + (((String) msg.obj).charAt(0) - 48));
-                    switch (((String) msg.obj).charAt(0) - 48) {
-                        case ApplicationHelper.STORY:
-                            Log.v(LOG_TAG, "STORY CASE");
-
-                            //new StoryUpdateAsyncTask(mContext).execute((String) msg.obj, ApplicationHelper.STORY_HEAD);
-                            break;
-                        case ApplicationHelper.STORY_INITIAL:
-                            Log.v(LOG_TAG, "STORY INITIAL CASE");
-
-                            //new StoryInitialAsyncTask(mContext).execute((String) msg.obj, ApplicationHelper.STORY_HEAD);
-                            ApplicationHelper.firstTurn = false;
+                    Log.v(LOG_TAG, "message object is " + msg.obj);
+                    String story = ((String) msg.obj);
+                    adapter.add(story);
+                    ApplicationHelper.getInstance().story.add(story);
 
 
-                            break;
-                        default:
-                            Log.v(LOG_TAG, "default is " + (((String) msg.obj).charAt(0) - 48));
-                            break;
-
-                    }//inner switch
                     if (storyReceivedListener != null) {
                         storyReceivedListener.onStoryReceived();
                     }

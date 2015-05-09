@@ -30,6 +30,7 @@ public class ApplicationHelper extends Application {
     private static ApplicationHandler applicationHandler;
     private final static String DEVICE_NAME;
     public boolean isHost = false;
+    public int DEVICE_TYPE;
     public boolean GAME_HAS_STARTED = false;
     private int whoIsPlaying;
     public static boolean myTurn = false;
@@ -43,6 +44,7 @@ public class ApplicationHelper extends Application {
 
     static {
         DEVICE_NAME = BluetoothAdapter.getDefaultAdapter().getName();
+        System.out.println("Device Name was initialized: " + DEVICE_NAME);
     }
 
     public static ApplicationHelper getInstance() {
@@ -70,8 +72,6 @@ public class ApplicationHelper extends Application {
 
     //Clears everything.
     public void prepareNewGame() {
-        if (sAvailableUUIDs.size() == Constants.sUUIDs.length)
-            return;
         sAvailableUUIDs.clear();
         sAvailableUUIDs.ensureCapacity(10);
         sAvailableUUIDs.addAll(Arrays.asList(Constants.sUUIDs));
@@ -84,6 +84,7 @@ public class ApplicationHelper extends Application {
         GAME_HAS_STARTED = false;
         whoIsPlaying = -1;
         myTurn = false;
+        DEVICE_TYPE=-1;
 
 
     }
@@ -97,6 +98,7 @@ public class ApplicationHelper extends Application {
         firstTurn = true;
         if (isHost)
             myTurn=true;
+        story = new ArrayList<>();  
     }
 
     private int getNextPlayer() {
@@ -191,7 +193,7 @@ public class ApplicationHelper extends Application {
             }
 
         }
-        playerSockets = new TreeMap<>();
+        playerSockets.clear();
 
     }
 
@@ -296,6 +298,7 @@ public class ApplicationHelper extends Application {
             byte[] buffer = builder.toString().getBytes();
 
             //Send the message to every connectedThread as well as to yourself.
+            //If the user is not the host, this list will only have a single thread.
             for (ConnectedThread thread : connectedThreads.values())
                 thread.write(buffer);
             applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
@@ -341,6 +344,9 @@ public class ApplicationHelper extends Application {
             }
         }
     }
+
+    //TODO properly do this using the database. This is merely a hack-around
+    public ArrayList<String> story = new ArrayList<>();
 
     public static class ApplicationHandler extends Handler {
 
@@ -404,6 +410,7 @@ public class ApplicationHelper extends Application {
                         case HANDLER_STORY_WRITE:
                             message = builder.substring(1, builder.length());
                             Log.v(LOG_TAG, "Handler story write message: " + message);
+                            if (storyHandler!=null) //This will be null if the host has left the "Game" screen
                             storyHandler.obtainMessage(STORY, message).sendToTarget();
                             break;
                         case ACTIVITY_CODE:
@@ -414,7 +421,7 @@ public class ApplicationHelper extends Application {
                                 Log.v(LOG_TAG + " ACTIVITY_CODE ", builder.substring(1, builder.length()));
                                 activityHandler.obtainMessage(ACTIVITY_CODE, builder.substring(1, builder.length())).sendToTarget();
                             } else {
-                                Log.v(LOG_TAG, "activityHandler was null");
+                                Log.e(LOG_TAG, "activityHandler was null");
                             }
                             break;
                         default:

@@ -46,6 +46,9 @@ public class LocalGame extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (ApplicationHelper.getInstance().GAME_HAS_STARTED)
+            this.finish();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_local_game);
 
@@ -99,12 +102,11 @@ public class LocalGame extends ActionBarActivity {
         Log.v(LOG_TAG, "onStart");
         super.onStart();
 
-        if (BluetoothManager.isBluetoothEnabled()){
+        if (BluetoothManager.isBluetoothEnabled()) {
             if (!restored)
                 //If this is the first time running, set the Paired devices.
                 frag.setDevicesList(btManager.getPairedDevices());
-        }
-        else{
+        } else {
             //The Bluetooth isn't enabled. Set a listener to listen for the result and prompts the user to enable it.
             btManager.setBluetoothRequestEnableListener(new BluetoothManager.BluetoothRequestEnableListener() {
                 @Override
@@ -137,10 +139,10 @@ public class LocalGame extends ActionBarActivity {
         //TODO remove. These are for debugging purposes.
         ApplicationHelper app = ApplicationHelper.getInstance();
         Log.v(LOG_TAG, "player sockets:");
-        for (BluetoothSocket socket: app.getPlayerSockets())
+        for (BluetoothSocket socket : app.getPlayerSockets())
             Log.v(LOG_TAG, socket.getRemoteDevice().getName());
         System.out.println("host Socket:");
-        if (app.getHostSocket()!=null)
+        if (app.getHostSocket() != null)
             Log.v(LOG_TAG, app.getHostSocket().getRemoteDevice().getName());
     }
 
@@ -161,7 +163,7 @@ public class LocalGame extends ActionBarActivity {
         private static final String LOG_TAG = LocalGame.class.getSimpleName() + PlaceholderFragment.class.getSimpleName();
         private static final int CONNECT_LOADER = 0;
         private static final String bundleDeviceList = "devicesListForSaveInstance";
-        private int devicesNumber=0;
+        private int devicesNumber = 0;
 
         private ListView listView;
         private Button spectate_button;
@@ -200,7 +202,6 @@ public class LocalGame extends ActionBarActivity {
         }
 
 
-
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -220,12 +221,12 @@ public class LocalGame extends ActionBarActivity {
         }
 
         @Override
-        public void onResume(){
+        public void onResume() {
             Log.v(LOG_TAG, "onResume");
             super.onResume();
-            if (connectLoaderState!=STATE_NONE){
+            if (connectLoaderState != STATE_NONE && !ApplicationHelper.getInstance().GAME_HAS_STARTED) {
                 Log.v(LOG_TAG, "if statement");
-                getLoaderManager().initLoader(CONNECT_LOADER, null, connectLoader );
+                getLoaderManager().initLoader(CONNECT_LOADER, null, connectLoader);
             }
         }
 
@@ -235,8 +236,6 @@ public class LocalGame extends ActionBarActivity {
             View rootView = inflater.inflate(R.layout.fragment_local_game_screen, container, false);
             //call findViewById for the join and spectate buttons and assign them their respective onClickListeners
             listView = (ListView) rootView.findViewById(R.id.pairedDevicesList);
-
-
 
 
             devicesAdapter = new ArrayAdapter<>(getActivity(),
@@ -315,7 +314,7 @@ public class LocalGame extends ActionBarActivity {
             return rootView;
         }
 
-        public void refresh(){
+        public void refresh() {
             ApplicationHelper.getInstance().prepareNewGame();
         }
 
@@ -326,19 +325,20 @@ public class LocalGame extends ActionBarActivity {
         /**
          * Creates a {@link grioanpier.auth.users.movies.bluetooth.ConnectTaskLoader} to try and connect to the specified device.
          * If a connection is established, it calls the respective method for the supplied {source}
+         *
          * @param MACaddress the MAC Address of the target device.
-         * @param source Either {SOURCE_BUTTON_JOIN} or {SOURCE_BUTTON_SPECTATE}
+         * @param source     Either {SOURCE_BUTTON_JOIN} or {SOURCE_BUTTON_SPECTATE}
          */
         private void connect(String MACaddress, final int source) {
             if (MACaddress == null)
                 return;
 
             String hostAddress = ApplicationHelper.getInstance().getHostAddress();
-            if (hostAddress==null)
+            if (hostAddress == null)
                 Log.v(LOG_TAG, "hostAddress was null");
-            else if (MACaddress.equals(hostAddress)){
+            else if (MACaddress.equals(hostAddress)) {
                 Toast.makeText(getActivity(), "Already connected", Toast.LENGTH_SHORT).show();
-                switch (source){
+                switch (source) {
                     case SOURCE_BUTTON_JOIN:
                         join();
                         return;
@@ -346,7 +346,7 @@ public class LocalGame extends ActionBarActivity {
                         spectate();
                         return;
                 }
-            }else{
+            } else {
                 System.out.println(MACaddress + " VS " + hostAddress);
             }
 
@@ -355,7 +355,7 @@ public class LocalGame extends ActionBarActivity {
 
             if (prev == null) {
                 prev = device;
-            } else if (!prev.getAddress().equals(device.getAddress())) {
+            } else /*if (!prev.getAddress().equals(device.getAddress())) */ {
                 getLoaderManager().destroyLoader(CONNECT_LOADER);
                 prev = device;
             }
@@ -363,10 +363,10 @@ public class LocalGame extends ActionBarActivity {
             connectLoaderState = STATE_RUNNING;
             button_source = source;
             connectedDevice = device;
-            getLoaderManager().initLoader(CONNECT_LOADER, null, connectLoader );
+            Log.v(LOG_TAG, "starting the loader");
+            getLoaderManager().initLoader(CONNECT_LOADER, null, connectLoader);
 
         }
-
 
 
         LoaderManager.LoaderCallbacks<BluetoothSocket> connectLoader = new LoaderManager.LoaderCallbacks<BluetoothSocket>() {
@@ -385,7 +385,7 @@ public class LocalGame extends ActionBarActivity {
                     String name = btSocket.getRemoteDevice().getName();
                     Toast.makeText(getActivity(), "Connected to " + name, Toast.LENGTH_LONG).show();
                     ApplicationHelper.getInstance().setHostSocket(btSocket);
-                    switch (button_source){
+                    switch (button_source) {
                         case SOURCE_BUTTON_JOIN:
                             join();
                             break;
@@ -407,15 +407,15 @@ public class LocalGame extends ActionBarActivity {
 
         private void spectate() {
             Intent intent = new Intent(getActivity(), WaitingScreen.class);
-            ApplicationHelper.getInstance().isHost=false;
-            intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_SPECTATOR);
+            ApplicationHelper.getInstance().isHost = false;
+            ApplicationHelper.getInstance().DEVICE_TYPE = Constants.DEVICE_SPECTATOR;
             startActivity(intent);
         }
 
         private void join() {
             Intent intent = new Intent(getActivity(), WaitingScreen.class);
-            ApplicationHelper.getInstance().isHost=false;
-            intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_PLAYER);
+            ApplicationHelper.getInstance().isHost = false;
+            ApplicationHelper.getInstance().DEVICE_TYPE = Constants.DEVICE_PLAYER;
             startActivity(intent);
         }
 
@@ -424,8 +424,8 @@ public class LocalGame extends ActionBarActivity {
             //Since the user wants to become a host, clear the host socket, if there is one.
 
             Intent intent = new Intent(getActivity(), WaitingScreen.class);
-            ApplicationHelper.getInstance().isHost=true;
-            intent.putExtra(Constants.DEVICE_TYPE, Constants.DEVICE_HOST);
+            ApplicationHelper.getInstance().isHost = true;
+            ApplicationHelper.getInstance().DEVICE_TYPE = Constants.DEVICE_HOST;
             startActivity(intent);
         }
 

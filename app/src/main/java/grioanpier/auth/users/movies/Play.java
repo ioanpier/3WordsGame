@@ -1,5 +1,6 @@
 package grioanpier.auth.users.movies;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import grioanpier.auth.users.movies.data.StoriesContract;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
 import grioanpier.auth.users.movies.utility.Constants;
 
@@ -37,8 +39,16 @@ public class Play extends ActionBarActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
-        }
+        }else if (id==R.id.save_story){
+            ContentValues values = new ContentValues();
+            values.put(StoriesContract.StoriesEntry.COLUMN_STORY, ApplicationHelper.getInstance().story.toString());
+            values.put(StoriesContract.StoriesEntry.COLUMN_HEAD, ApplicationHelper.STORY_HEAD);
 
+            getContentResolver().insert(
+                    StoriesContract.StoriesEntry.CONTENT_URI,
+                    values
+            );
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -46,7 +56,7 @@ public class Play extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
-        deviceType = getIntent().getIntExtra(Constants.DEVICE_TYPE, Constants.DEVICE_SPECTATOR);
+        deviceType = ApplicationHelper.getInstance().DEVICE_TYPE;
         switch (deviceType){
             case Constants.DEVICE_SPECTATOR:
                 Log.v(LOG_TAG, "DEVICE_SPECTATOR");
