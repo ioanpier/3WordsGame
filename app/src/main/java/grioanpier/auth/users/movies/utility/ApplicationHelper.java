@@ -28,7 +28,7 @@ public class ApplicationHelper extends Application {
     private static ApplicationHelper singleton;
     private final static String LOG_TAG = ApplicationHelper.class.getSimpleName();
     private static ApplicationHandler applicationHandler;
-    private final static String DEVICE_NAME;
+    public static String DEVICE_NAME;
     public boolean isHost = false;
     public int DEVICE_TYPE;
     public boolean GAME_HAS_STARTED = false;
@@ -37,14 +37,8 @@ public class ApplicationHelper extends Application {
     public static boolean firstTurn = false;
     public static String STORY_HEAD;
 
-    //for the debug button
     public int getWhoIsPlaying() {
         return whoIsPlaying;
-    }
-
-    static {
-        DEVICE_NAME = BluetoothAdapter.getDefaultAdapter().getName();
-        System.out.println("Device Name was initialized: " + DEVICE_NAME);
     }
 
     public static ApplicationHelper getInstance() {
@@ -132,6 +126,16 @@ public class ApplicationHelper extends Application {
         super.onCreate();
         singleton = this;
         applicationHandler = new ApplicationHandler(getApplicationContext());
+        DEVICE_NAME = BluetoothAdapter.getDefaultAdapter().getName();
+        System.out.println("Device Name was initialized: " + DEVICE_NAME);
+
+        //TODO ο host δεν αναμεταδίδει τα μνματα
+        Log.v(LOG_TAG, "READ THE TODO ABOVE");
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -264,6 +268,9 @@ public class ApplicationHelper extends Application {
      */
     public synchronized void write(String message, int source) {
 
+
+
+
         synchronized (Write_Lock) {
             //Format the message.
             //This is okay because my constants are in the range of 1-127
@@ -302,6 +309,12 @@ public class ApplicationHelper extends Application {
             for (ConnectedThread thread : connectedThreads.values())
                 thread.write(buffer);
             applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
+        }
+
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Log.v(LOG_TAG, "Interrupted");
         }
 
     }

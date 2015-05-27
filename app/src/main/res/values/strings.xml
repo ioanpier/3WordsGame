@@ -45,6 +45,8 @@
     <string name="waiting">Waiting for the host to start the game</string>
     <string name="playersJoined">Waiting for the host to start the game. There are <xliff:g id="number" example="5">%d</xliff:g> people in the room.</string>
     <string name="startgame_button">Start the Game</string>
+    <string name="title_activity_hall_of_stories">HallOfStories</string>
+    <string name="title_activity_story__preview">Story_Preview</string>
 
 
 

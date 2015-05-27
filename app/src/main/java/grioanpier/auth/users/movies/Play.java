@@ -35,19 +35,23 @@ public class Play extends ActionBarActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        Log.v(LOG_TAG, "option item selected");
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }else if (id==R.id.save_story){
+            Log.v(LOG_TAG, "save story menu item");
             ContentValues values = new ContentValues();
-            values.put(StoriesContract.StoriesEntry.COLUMN_STORY, ApplicationHelper.getInstance().story.toString());
+            values.put(StoriesContract.StoriesEntry.COLUMN_STORY, getStory());
             values.put(StoriesContract.StoriesEntry.COLUMN_HEAD, ApplicationHelper.STORY_HEAD);
 
             getContentResolver().insert(
                     StoriesContract.StoriesEntry.CONTENT_URI,
                     values
             );
+
+            Toast.makeText(this, "Story saved!", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -99,6 +103,14 @@ public class Play extends ActionBarActivity {
             }
         }
     };
+
+    public String getStory(){
+        StringBuilder builder = new StringBuilder();
+        for (String line : ApplicationHelper.getInstance().story){
+            builder.append(line).append(" ");
+        }
+        return builder.toString();
+    }
 
     private ActivityHandler mHandler = new ActivityHandler(this);
 

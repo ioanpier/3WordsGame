@@ -66,9 +66,6 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
 
         listView.setAdapter(adapter);
 
-        for (String s : listItems) {
-            Log.v(LOG_TAG, s);
-        }
 
         Log.v(LOG_TAG, "initializing story loader");
         //getLoaderManager().initLoader(STORY_LOADER, null, this);
@@ -251,7 +248,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
         for (String s : every3words(story))
             Log.v(LOG_TAG, s);
 
-
+        adapter.clear();
         adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_list_item_1,
                 every3words(story));
@@ -296,7 +293,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
                 case ApplicationHelper.STORY:
                     Log.v(LOG_TAG, "message object is " + msg.obj);
                     String story = ((String) msg.obj);
-                    adapter.add(story);
+                        adapter.add(story);
                     ApplicationHelper.getInstance().story.add(story);
 
 

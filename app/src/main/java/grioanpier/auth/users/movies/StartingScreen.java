@@ -111,7 +111,9 @@ public class StartingScreen extends ActionBarActivity {
             button_hallofstories.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(getActivity(), "Coming Soon!", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getActivity(), "Coming Soon!", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(getActivity(), HallOfStories.class);
+                    startActivity(intent);
                 }
             });
 
@@ -124,6 +126,8 @@ public class StartingScreen extends ActionBarActivity {
                     startActivity(intent);
                 }
             });
+
+            Toast.makeText(getActivity(), ApplicationHelper.DEVICE_NAME, Toast.LENGTH_SHORT).show();
 
 
             return rootView;

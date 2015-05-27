@@ -1,16 +1,12 @@
 package grioanpier.auth.users.movies;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-
-import grioanpier.auth.users.movies.data.StoriesContract;
 
 /**
  * Created by Ioannis
@@ -34,24 +30,24 @@ public class MainActivityFragment extends Fragment {
             }
         });
 
-        Cursor cursor = getActivity().getContentResolver().query(
-                StoriesContract.StoriesEntry.CONTENT_URI,
-                null,
-                null,
-                null,
-                null
-        );
-
-        if (cursor.moveToFirst()){
-            Log.v(LOG_TAG, cursor.getString(0) + " and " + cursor.getString(1));
-            while (cursor.moveToNext()){
-                Log.v(LOG_TAG, cursor.getString(0) + " and " + cursor.getString(1));
-            }
-        }else{
-            Log.v(LOG_TAG, "database was empty!");
-        }
-
-        cursor.close();
+        //Cursor cursor = getActivity().getContentResolver().query(
+        //        StoriesContract.StoriesEntry.CONTENT_URI,
+        //        null,
+        //        null,
+        //        null,
+        //        null
+        //);
+//
+        //if (cursor.moveToFirst()){
+        //    Log.v(LOG_TAG, cursor.getString(0) + " and " + cursor.getString(1));
+        //    while (cursor.moveToNext()){
+        //        Log.v(LOG_TAG, cursor.getString(0) + " and " + cursor.getString(1));
+        //    }
+        //}else{
+        //    Log.v(LOG_TAG, "database was empty!");
+        //}
+//
+        //cursor.close();
 
         /*
         if (cursor.moveToFirst()){
