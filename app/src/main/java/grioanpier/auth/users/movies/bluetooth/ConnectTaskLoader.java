@@ -86,7 +86,7 @@ public class ConnectTaskLoader extends android.support.v4.content.AsyncTaskLoade
             Log.v(LOG_TAG, "doing with uuid: " + mUUIDs[index]);
 
             try {
-
+                Thread.sleep(100);
                 btSocket = mBtDevice.createRfcommSocketToServiceRecord(mUUIDs[index]);
                 btSocket.connect();
                 Log.v(LOG_TAG, "connected");
@@ -94,7 +94,11 @@ public class ConnectTaskLoader extends android.support.v4.content.AsyncTaskLoade
                 //Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
                 btSocket=null;
                 index++;
+            } catch (InterruptedException e) {
+                btSocket=null;
+                e.printStackTrace();
             }
+
         }while (btSocket==null && index < mUUIDs.length );
 
         return btSocket;

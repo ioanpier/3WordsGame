@@ -28,7 +28,7 @@ public class ApplicationHelper extends Application {
     private static ApplicationHelper singleton;
     private final static String LOG_TAG = ApplicationHelper.class.getSimpleName();
     private static ApplicationHandler applicationHandler;
-    public static String DEVICE_NAME;
+    public static String DEVICE_NAME = BluetoothAdapter.getDefaultAdapter().getName();
     public boolean isHost = false;
     public int DEVICE_TYPE;
     public boolean GAME_HAS_STARTED = false;
@@ -78,7 +78,7 @@ public class ApplicationHelper extends Application {
         GAME_HAS_STARTED = false;
         whoIsPlaying = -1;
         myTurn = false;
-        DEVICE_TYPE=-1;
+        DEVICE_TYPE = -1;
 
 
     }
@@ -91,8 +91,8 @@ public class ApplicationHelper extends Application {
         GAME_HAS_STARTED = true;
         firstTurn = true;
         if (isHost)
-            myTurn=true;
-        story = new ArrayList<>();  
+            myTurn = true;
+        story = new ArrayList<>();
     }
 
     private int getNextPlayer() {
@@ -107,6 +107,9 @@ public class ApplicationHelper extends Application {
 
     public void notifyNextPlayer() {
         int next = getNextPlayer();
+        if (next==-1){
+
+        }
         write(String.valueOf(YOUR_TURN), ACTIVITY_CODE, next);
 
     }
@@ -126,8 +129,6 @@ public class ApplicationHelper extends Application {
         super.onCreate();
         singleton = this;
         applicationHandler = new ApplicationHandler(getApplicationContext());
-        DEVICE_NAME = BluetoothAdapter.getDefaultAdapter().getName();
-        System.out.println("Device Name was initialized: " + DEVICE_NAME);
 
         //TODO ο host δεν αναμεταδίδει τα μνματα
         Log.v(LOG_TAG, "READ THE TODO ABOVE");
@@ -268,9 +269,6 @@ public class ApplicationHelper extends Application {
      */
     public synchronized void write(String message, int source) {
 
-
-
-
         synchronized (Write_Lock) {
             //Format the message.
             //This is okay because my constants are in the range of 1-127
@@ -281,7 +279,7 @@ public class ApplicationHelper extends Application {
                 case CHAT:
                     Log.v(LOG_TAG, "CHAT");
                     //builder.append(String.valueOf(HANDLER_CHAT_WRITE));
-                    builder.append(HANDLER_CHAT_WRITE);
+                    builder.append(CHAT);
                     //Add the device's name to the message.
                     if (DEVICE_NAME.length() < 10) {
                         builder.append(0);
@@ -291,7 +289,7 @@ public class ApplicationHelper extends Application {
                     break;
                 case STORY:
                     Log.v(LOG_TAG, "STORY");
-                    builder.append(HANDLER_STORY_WRITE);
+                    builder.append(STORY);
 
                     break;
                 case ACTIVITY_CODE:
@@ -304,24 +302,50 @@ public class ApplicationHelper extends Application {
             Log.v(LOG_TAG + " write to all threads", "message to be sent: " + builder.toString());
             byte[] buffer = builder.toString().getBytes();
 
-            //Send the message to every connectedThread as well as to yourself.
-            //If the user is not the host, this list will only have a single thread.
-            for (ConnectedThread thread : connectedThreads.values())
-                thread.write(buffer);
-            applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
+            if (isHost)
+                //The message is relayed, if needed, inside the obtainMessage method.
+                applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
+            else
+                //This list only has a single thread, really.
+                for (ConnectedThread thread : connectedThreads.values())
+                    thread.write(buffer);
         }
 
+        //try {
+        //    Thread.sleep(100);
+        //} catch (InterruptedException e) {
+        //    Log.v(LOG_TAG, "Interrupted");
+        //}
+
+    }
+
+    public synchronized void relay(String message) {
+        byte[] buffer = message.getBytes();
+
+        //Don't want messages to be relayed too fast in succession because they entangled.
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
             Log.v(LOG_TAG, "Interrupted");
         }
 
+        for (ConnectedThread thread : connectedThreads.values()){
+            Log.v(LOG_TAG, "Relaying");
+            thread.write(buffer);
+        }
+
+
+
     }
 
     public void write(String message, int source, int threadPos) {
         synchronized (Write_Lock) {
             StringBuilder builder = new StringBuilder();
+
+
+            if (threadPos==-1){
+                builder.append(HOST_ONLY);
+            }
 
 
             switch (source) {
@@ -342,6 +366,12 @@ public class ApplicationHelper extends Application {
                 return;
             }
 
+            //Don't want messages to be relayed too fast in succession because they entangled.
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Log.v(LOG_TAG, "Interrupted");
+            }
 
             Collection<ConnectedThread> col = connectedThreads.values();
             if (!col.isEmpty()) {
@@ -358,7 +388,6 @@ public class ApplicationHelper extends Application {
         }
     }
 
-    //TODO properly do this using the database. This is merely a hack-around
     public ArrayList<String> story = new ArrayList<>();
 
     public static class ApplicationHandler extends Handler {
@@ -372,20 +401,29 @@ public class ApplicationHelper extends Application {
 
         @Override
         public synchronized void handleMessage(Message msg) {
-            /*TODO Store the various Handlers inside an ArrayList.
-            *  Every time a message is received, it will be forwarded to every Handler.
-            *  The Handlers themselves will decide if the message is for them or not.
-            */
-
             //Log.v(LOG_TAG, new String((byte[]) msg.obj, 0, msg.arg1));
             switch (msg.what) {
                 case THREAD_READ:
+
+
                     int numOfBytes = msg.arg1;
                     StringBuilder builder = new StringBuilder(new String((byte[]) msg.obj, 0, numOfBytes));
                     int messageType = builder.charAt(0) - 48;
                     String message;
+
+                    if (ApplicationHelper.getInstance().isHost) {
+                        //ApplicationHelper.getInstance().write(builder.toString(), messageType);
+                        if (messageType==HOST_ONLY){
+                            builder.deleteCharAt(0);
+                            messageType = builder.charAt(0) - 48;
+                        }else{
+                            ApplicationHelper.getInstance().relay(builder.toString());
+                        }
+
+                    }
+
                     switch (messageType) {
-                        case HANDLER_CHAT_WRITE:
+                        case CHAT:
                             //The length is saved in the 2nd and 3rd byte.
                             //Reconstruct it: 56 = 5*10 + 6
                             int nameLength = (builder.charAt(1) - 48) * 10 + (builder.charAt(2) - 48);
@@ -420,11 +458,11 @@ public class ApplicationHelper extends Application {
                             break;
 
 
-                        case HANDLER_STORY_WRITE:
+                        case STORY:
                             message = builder.substring(1, builder.length());
                             Log.v(LOG_TAG, "Handler story write message: " + message);
-                            if (storyHandler!=null) //This will be null if the host has left the "Game" screen
-                            storyHandler.obtainMessage(STORY, message).sendToTarget();
+                            if (storyHandler != null) //This will be null if the host has left the "Game" screen
+                                storyHandler.obtainMessage(STORY, message).sendToTarget();
                             break;
                         case ACTIVITY_CODE:
 
@@ -470,8 +508,10 @@ public class ApplicationHelper extends Application {
                         ApplicationHelper.getInstance().prepareNewGame();
 
                         Intent intent = new Intent(mContext, StartingScreen.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         mContext.startActivity(intent);
+
+
                     }
 
                     if (activityHandler == null) {
@@ -511,6 +551,7 @@ public class ApplicationHelper extends Application {
     public static final int YOUR_TURN = 5;
     public static final int PASS = 6; //The player has passed his turn. This is used by spectators.
     public static final int START_GAME = 7; //The host has started the game. Next screen please!
+    public static final int HOST_ONLY = 8; //The host has started the game. Next screen please!
 
 
     //These are provided as int
@@ -525,8 +566,6 @@ public class ApplicationHelper extends Application {
     //Codes for the chat
     public static final int MESSAGE_ME = 2;
     public static final int MESSAGE_OTHER = 3;
-
-
 
 
 }
