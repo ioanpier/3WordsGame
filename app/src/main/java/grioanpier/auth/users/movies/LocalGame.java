@@ -46,10 +46,8 @@ public class LocalGame extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (ApplicationHelper.getInstance().GAME_HAS_STARTED)
-            this.finish();
-
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_local_game);
 
         //Finish the activity if there is no Bluetooth on the device.
@@ -101,6 +99,11 @@ public class LocalGame extends ActionBarActivity {
     public void onStart() {
         Log.v(LOG_TAG, "onStart");
         super.onStart();
+
+        Log.v(LOG_TAG, "GAME HAS STARTED: " + ApplicationHelper.getInstance().GAME_HAS_STARTED);
+        if (ApplicationHelper.getInstance().GAME_HAS_STARTED) {
+            this.finish();
+        }
 
         if (BluetoothManager.isBluetoothEnabled()) {
             if (!restored)
@@ -355,7 +358,7 @@ public class LocalGame extends ActionBarActivity {
 
             if (prev == null) {
                 prev = device;
-            } else /*if (!prev.getAddress().equals(device.getAddress())) */ {
+            } else {
                 getLoaderManager().destroyLoader(CONNECT_LOADER);
                 prev = device;
             }

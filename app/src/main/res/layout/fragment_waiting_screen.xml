@@ -9,6 +9,14 @@
     android:orientation="vertical">
 
     <TextView
+        android:text="@string/waitingForHost"
+        android:id="@+id/waitingForHost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="@dimen/playersJoined"/>
+
+    <TextView
         android:text="@string/playersJoined"
         android:id="@+id/players_joined"
         android:layout_width="wrap_content"

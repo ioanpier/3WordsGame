@@ -83,22 +83,7 @@
         x = "6296"      
         y = "403"/>
     </statePointEntry>
-    <statePointEntry>
-      <state      
-        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
-        className = "grioanpier.auth.users.movies.BluetoothChat"/>
-      <point      
-        x = "500"      
-        y = "6544"/>
-    </statePointEntry>
-    <statePointEntry>
-      <state      
-        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
-        className = "grioanpier.auth.users.movies.BluetoothChat"/>
-      <point      
-        x = "2536"      
-        y = "6544"/>
-    </statePointEntry>
+
     <statePointEntry>
       <state      
         class = "com.android.tools.idea.editors.navigation.model.ActivityState"      

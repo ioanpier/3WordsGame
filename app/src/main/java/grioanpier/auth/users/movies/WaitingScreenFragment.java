@@ -3,6 +3,7 @@ package grioanpier.auth.users.movies;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ public class WaitingScreenFragment extends Fragment {
 
     private Button mButton;
     private TextView mPlayersJoinedTextView;
+    private TextView mWaitingForHost;
 
     private final String LOG_TAG = WaitingScreenFragment.class.getSimpleName();
 
@@ -45,34 +47,40 @@ public class WaitingScreenFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_waiting_screen, container, false);
         mButton = (Button) rootView.findViewById(R.id.button_start_game);
-
-        switch (deviceType) {
-
-            case Constants.DEVICE_HOST:
-                mButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        ((StartGameButtonClicked) getActivity()).onStartGameButtonClicked();
-                    }
-                });
-                break;
-            default:
-                //Remove the "Start the Game" button, that's only for the host.
-                mButton.setVisibility(View.GONE);
-                break;
-        }
-
         mPlayersJoinedTextView = (TextView) rootView.findViewById(R.id.players_joined);
-        mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));
+        mWaitingForHost = ((TextView) rootView.findViewById(R.id.waitingForHost));
 
+        mButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((StartGameButtonClicked) getActivity()).onStartGameButtonClicked();
+            }
+        });
         return rootView;
     }
 
     @Override
-    public void onDestroy(){
-        super.onDestroy();
-        ApplicationHelper.getInstance().unregisterChatHandler();
+    public void onStart() {
+        super.onStart();
 
+        if (ApplicationHelper.getInstance().GAME_HAS_STARTED) {
+            Log.v(LOG_TAG, "onStart1");
+            mPlayersJoinedTextView.setVisibility(View.GONE);
+            mWaitingForHost.setVisibility(View.GONE);
+            mButton.setText(R.string.resume_story);
+            mButton.setVisibility(View.VISIBLE);
+        } else {
+            Log.v(LOG_TAG, "onStart2");
+            switch (deviceType) {
+                case Constants.DEVICE_HOST:
+                    mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));
+                    break;
+                default:
+                    mPlayersJoinedTextView.setVisibility(View.GONE);
+                    mButton.setVisibility(View.GONE);
+                    break;
+            }
+        }
     }
 
     @Override
@@ -86,17 +94,13 @@ public class WaitingScreenFragment extends Fragment {
         mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));
     }
 
-    public void setPlayersJoined(int playersJoined){
-        mPlayersJoined = playersJoined;
-    }
-
     public void playersJoinedDecrement() {
         mPlayersJoined--;
         mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));
     }
 
     public interface StartGameButtonClicked {
-        public void onStartGameButtonClicked();
+        void onStartGameButtonClicked();
     }
 
 

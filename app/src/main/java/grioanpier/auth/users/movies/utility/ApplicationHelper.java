@@ -80,6 +80,8 @@ public class ApplicationHelper extends Application {
         myTurn = false;
         DEVICE_TYPE = -1;
 
+        story = new ArrayList<>();
+        chat = new ArrayList<>();
 
     }
 
@@ -129,14 +131,6 @@ public class ApplicationHelper extends Application {
         super.onCreate();
         singleton = this;
         applicationHandler = new ApplicationHandler(getApplicationContext());
-
-        //TODO ο host δεν αναμεταδίδει τα μνματα
-        Log.v(LOG_TAG, "READ THE TODO ABOVE");
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
 
@@ -389,6 +383,7 @@ public class ApplicationHelper extends Application {
     }
 
     public ArrayList<String> story = new ArrayList<>();
+    public ArrayList<String> chat = new ArrayList<>();
 
     public static class ApplicationHandler extends Handler {
 

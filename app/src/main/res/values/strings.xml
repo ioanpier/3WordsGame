@@ -28,7 +28,7 @@
     <string name="dialog_gamehasstarted_resume">Resume</string>
     <string name="dialog_gamehasstarted_newgame">New Game</string>
 
-    <!-- Waiting Screen -->
+    <!-- About Screen -->
     <string name="info1">This application was made by Ioannis Pierros for the gdgthess Study Jams.</string>
     <string name="info2">contact me at: ioannis@gmail.com</string>
 
@@ -43,11 +43,16 @@
 
     <!-- Waiting Screen -->
     <string name="waiting">Waiting for the host to start the game</string>
-    <string name="playersJoined">Waiting for the host to start the game. There are <xliff:g id="number" example="5">%d</xliff:g> people in the room.</string>
+    <string name="waitingForHost">Waiting for the host to start the game. </string>
+    <string name="playersJoined">There are <xliff:g id="number" example="5">%d</xliff:g> people in the room.</string>
     <string name="startgame_button">Start the Game</string>
+    <string name="resume_story">To the Story!</string>
     <string name="title_activity_hall_of_stories">HallOfStories</string>
     <string name="title_activity_story__preview">Story_Preview</string>
 
 
+
+    <!-- Play Screen -->
+    <string name="goToChat">To the Chat!</string>
 
 </resources>

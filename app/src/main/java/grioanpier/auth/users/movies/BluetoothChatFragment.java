@@ -20,9 +20,7 @@ import java.util.ArrayList;
 
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
 
-/**
- * Created by Ioannis on 10/4/2015.
- */
+
 public class BluetoothChatFragment extends Fragment {
 
     private static final String LOG_TAG = BluetoothChatFragment.class.getSimpleName();
@@ -49,8 +47,6 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-
         return inflater.inflate(R.layout.fragment_bluetooth_chat, container, false);
     }
 
@@ -59,14 +55,13 @@ public class BluetoothChatFragment extends Fragment {
         mConversationView = (ListView) view.findViewById(R.id.chat_listview);
         mOutEditText = (EditText) view.findViewById(R.id.edit_text_out);
 
-        if (savedInstanceState!=null)
-            mConversationArrayList = savedInstanceState.getStringArrayList(CHAT_ITEMS);
-        else
-            mConversationArrayList = new ArrayList<>();
+        mConversationArrayList = ApplicationHelper.getInstance().chat;
 
 
         // Initialize the array adapter for the conversation thread using (possibly) the previous chat (restore it)
-        mConversationArrayAdapter = new ArrayAdapter<>(getActivity(), R.layout.message, mConversationArrayList);
+        mConversationArrayAdapter = new ArrayAdapter<>(getActivity(),
+                R.layout.message,
+                mConversationArrayList);
 
         mConversationView.setAdapter(mConversationArrayAdapter);
 
@@ -127,16 +122,18 @@ public class BluetoothChatFragment extends Fragment {
     public static class ChatHandler extends Handler{
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case ApplicationHelper.MESSAGE_ME:
-                    Log.v(LOG_TAG, "MESSAGE_ME CASE");
-                    mConversationArrayAdapter.add((String)msg.obj);
-                    break;
-                case ApplicationHelper.MESSAGE_OTHER:
-                    Log.v(LOG_TAG, "MESSAGE_OTHER CASE");
-                    mConversationArrayAdapter.add((String)msg.obj);
-                    break;
-            }
+            ApplicationHelper.getInstance().chat.add((String) msg.obj);
+            mConversationArrayAdapter.notifyDataSetChanged();
+
+            //This is commented so that if I ever need to use this, I will remember.
+            //switch (msg.what) {
+            //    case ApplicationHelper.MESSAGE_ME:
+            //        Log.v(LOG_TAG, "MESSAGE_ME CASE");
+            //        break;
+            //    case ApplicationHelper.MESSAGE_OTHER:
+            //        Log.v(LOG_TAG, "MESSAGE_OTHER CASE");
+            //        break;
+            //}
         }
     }
 

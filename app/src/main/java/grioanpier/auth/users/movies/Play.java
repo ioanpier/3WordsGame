@@ -61,19 +61,7 @@ public class Play extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
         deviceType = ApplicationHelper.getInstance().DEVICE_TYPE;
-        switch (deviceType){
-            case Constants.DEVICE_SPECTATOR:
-                Log.v(LOG_TAG, "DEVICE_SPECTATOR");
-                break;
-            case Constants.DEVICE_PLAYER:
-                Log.v(LOG_TAG, "DEVICE_PLAYER");
-                break;
-            case Constants.DEVICE_HOST:
-                Log.v(LOG_TAG, "DEVICE_HOST");
-                break;
-        }
         playFragment = (PlayFragment) getSupportFragmentManager().findFragmentById(R.id.play_fragment);
-
     }
 
     @Override

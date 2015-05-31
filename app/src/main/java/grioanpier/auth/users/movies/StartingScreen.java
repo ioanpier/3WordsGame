@@ -22,6 +22,7 @@ public class StartingScreen extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_starting_screen);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()

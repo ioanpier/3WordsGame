@@ -5,14 +5,11 @@ package grioanpier.auth.users.movies;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.database.Cursor;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -29,10 +26,9 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 
-import grioanpier.auth.users.movies.data.StoriesContract;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
 
-public class PlayFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
+public class PlayFragment extends Fragment {
 
     private static String LOG_TAG = PlayFragment.class.getSimpleName();
     private ArrayList<String> listItems = new ArrayList<>();
@@ -41,6 +37,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
     private EditText editText;
     private ListView listView;
     private Button debug;
+    private Button toTheChat_button;
 
     private static final int STORY_LOADER = 0;
 
@@ -54,11 +51,11 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
 
         listView = (ListView) rootView.findViewById(R.id.story_listview);
 
-        if (savedInstanceState != null)
-            listItems = savedInstanceState.getStringArrayList(STORY);
-        else if (!ApplicationHelper.getInstance().story.isEmpty()){
+        //if (savedInstanceState != null)
+        //    listItems = savedInstanceState.getStringArrayList(STORY);
+        //else if (!ApplicationHelper.getInstance().story.isEmpty()) {
             listItems = ApplicationHelper.getInstance().story;
-        }
+        //}
 
         adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_list_item_1,
@@ -67,8 +64,6 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
         listView.setAdapter(adapter);
 
 
-        Log.v(LOG_TAG, "initializing story loader");
-        //getLoaderManager().initLoader(STORY_LOADER, null, this);
         editText = (EditText) rootView.findViewById(R.id.story_edittext);
 
         //Sets the soft keyboard to be hidden when the app starts.
@@ -133,10 +128,20 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
                         }).show();
 
 
-
-
             }
         });
+
+        toTheChat_button = (Button) rootView.findViewById(R.id.goToChat);
+
+        toTheChat_button.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), WaitingScreen.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
+            }
+        });
+
 
         return rootView;
     }
@@ -214,51 +219,50 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
         }
     }
 
-    /**
-     * The Handler that gets the messages. The messages are first handled in {@link ApplicationHelper}
-     */
-    private StoryHandler mHandler = new StoryHandler(getActivity());
-
-
     //Queries the database for the story and adds it to the arrayadapter.
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Log.v(LOG_TAG, "onCreateLoader");
-        getActivity();
-        String storyHead = ApplicationHelper.STORY_HEAD;
-        Log.v(LOG_TAG, "validate storyHead " + storyHead);
-        //We want the story with COLUMN_HEAD==ApplicationHelper.STORY_HEAD
-        return new CursorLoader(getActivity(),
-                StoriesContract.StoriesEntry.CONTENT_URI,
-                new String[]{StoriesContract.StoriesEntry.COLUMN_STORY + " = ?"},
-                StoriesContract.StoriesEntry.COLUMN_HEAD,
-                new String[]{storyHead},
-                null);
-    }
-
-    @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        Log.v(LOG_TAG, "onLoadFinished");
-        if (!cursor.moveToFirst())
-            return;
-
-        int columnIndex = cursor.getColumnIndex(StoriesContract.StoriesEntry.COLUMN_STORY);
-        String story = cursor.getString(columnIndex);
-        Log.v(LOG_TAG, "story");
-        for (String s : every3words(story))
-            Log.v(LOG_TAG, s);
-
-        adapter.clear();
-        adapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1,
-                every3words(story));
-
-        listView.setAdapter(adapter);
-    }
-
-    @Override
-    public void onLoaderReset(Loader<Cursor> loader) {
-    }
+    //@Override
+    //public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    //    Log.v(LOG_TAG, "onCreateLoader");
+    //    getActivity();
+    //    String storyHead = ApplicationHelper.STORY_HEAD;
+    //    Log.v(LOG_TAG, "validate storyHead " + storyHead);
+    //    Log.v(LOG_TAG, "play fragment create loader");
+    //    //We want the story with COLUMN_HEAD==ApplicationHelper.STORY_HEAD
+    //    return new CursorLoader(getActivity(),
+    //            StoriesContract.StoriesEntry.CONTENT_URI,
+    //            new String[]{StoriesContract.StoriesEntry.COLUMN_STORY + " = ?"},
+    //            StoriesContract.StoriesEntry.COLUMN_HEAD,
+    //            new String[]{storyHead},
+    //            null);
+    //}
+//
+    //@Override
+    //public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+    //    Log.v(LOG_TAG, "onLoadFinished");
+    //    if (!cursor.moveToFirst()){
+    //        Log.v(LOG_TAG, "Load finished but escaped!");
+    //        return;
+    //    }
+//
+    //    Log.v(LOG_TAG, "play fragment Load finished");
+//
+    //    int columnIndex = cursor.getColumnIndex(StoriesContract.StoriesEntry.COLUMN_STORY);
+    //    String story = cursor.getString(columnIndex);
+    //    Log.v(LOG_TAG, "story");
+    //    for (String s : every3words(story))
+    //        Log.v(LOG_TAG, s);
+//
+    //    adapter.clear();
+    //    adapter = new ArrayAdapter<>(getActivity(),
+    //            android.R.layout.simple_list_item_1,
+    //            every3words(story));
+//
+    //    listView.setAdapter(adapter);
+    //}
+//
+    //@Override
+    //public void onLoaderReset(Loader<Cursor> loader) {
+    //}
 
     /**
      * Seperates the string every 3 words
@@ -278,6 +282,11 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
         return finalMessage;
     }
 
+    /**
+     * The Handler that gets the messages. The messages are first handled in {@link ApplicationHelper}
+     */
+    private StoryHandler mHandler = new StoryHandler(getActivity());
+
     //This is extended simply because making a new Handler was giving me "a leak might occur" warning.
     public static class StoryHandler extends Handler {
         Context mContext;
@@ -291,11 +300,8 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case ApplicationHelper.STORY:
-                    Log.v(LOG_TAG, "message object is " + msg.obj);
-                    String story = ((String) msg.obj);
-                        adapter.add(story);
-                    ApplicationHelper.getInstance().story.add(story);
-
+                    ApplicationHelper.getInstance().story.add((String) msg.obj);
+                    adapter.notifyDataSetChanged();
 
                     if (storyReceivedListener != null) {
                         storyReceivedListener.onStoryReceived();
@@ -306,7 +312,7 @@ public class PlayFragment extends Fragment implements LoaderManager.LoaderCallba
     }// handler class
 
     public interface StoryReceivedListener {
-        public void onStoryReceived();
+        void onStoryReceived();
     }
 
     private static StoryReceivedListener storyReceivedListener;

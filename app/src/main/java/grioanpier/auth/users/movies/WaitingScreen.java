@@ -73,8 +73,10 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
                     @Override
                     public void onEnabled() {
-                        //Start listening for incoming connections as soon as the bluetooth is enabled.
-                        serverListenForConnections();
+                        if (!ApplicationHelper.getInstance().GAME_HAS_STARTED) {
+                            //Start listening for incoming connections as soon as the bluetooth is enabled if the game hasn't started
+                            serverListenForConnections();
+                        }
                     }
                 });
                 btManager.ensureEnabled();
@@ -88,7 +90,8 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                             Toast.makeText(getApplicationContext(), "Non-paired devices won't be able to find you", Toast.LENGTH_SHORT).show();
                     }
                 });
-                btManager.ensureDiscoverable();
+                if (!ApplicationHelper.getInstance().GAME_HAS_STARTED)
+                    btManager.ensureDiscoverable();
                 break;
             }
         }
@@ -155,11 +158,19 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
     @Override
     public void onStartGameButtonClicked() {
-        //When the game starts, assign a random name to the story. Use a randomUUID :D
-        ApplicationHelper.getInstance().prepareNewStory();
-        String randomUUID = UUID.randomUUID().toString();
-        Log.v(LOG_TAG, "randomUUID headStory is " + randomUUID);
-        ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.START_GAME)+ randomUUID, ApplicationHelper.ACTIVITY_CODE);
+
+        if (!ApplicationHelper.getInstance().GAME_HAS_STARTED) {
+            //When the game starts, assign a random name to the story. Use a randomUUID :D
+            ApplicationHelper.getInstance().prepareNewStory();
+            String randomUUID = UUID.randomUUID().toString();
+            Log.v(LOG_TAG, "randomUUID headStory is " + randomUUID);
+            ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.START_GAME) + randomUUID, ApplicationHelper.ACTIVITY_CODE);
+        } else {
+            Intent intent = new Intent(this, Play.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            startActivity(intent);
+        }
+
     }
 
 
@@ -188,7 +199,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                 case ApplicationHelper.ACTIVITY_CODE:
                     String message = (String) msg.obj;
                     Log.v(LOG_TAG, "ACTIVITY_CODE case: " + message);
-                    int mySwitch = message.charAt(0)-48;
+                    int mySwitch = message.charAt(0) - 48;
                     switch (mySwitch) {
                         //Receive the code to start the game
                         case ApplicationHelper.START_GAME:
