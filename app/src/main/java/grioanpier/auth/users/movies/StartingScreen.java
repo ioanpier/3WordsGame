@@ -22,7 +22,6 @@ public class StartingScreen extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_starting_screen);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
@@ -87,7 +86,11 @@ public class StartingScreen extends ActionBarActivity {
                                 .setMessage(R.string.dialog_gamehasstarted_desc)
                                 .setPositiveButton(R.string.dialog_gamehasstarted_resume, new DialogInterface.OnClickListener() {
                                     public void onClick(DialogInterface dialog, int id) {
-                                        Intent intent = new Intent(getActivity(), Play.class);
+                                        Intent intent;
+                                        if (ApplicationHelper.twoPane)
+                                            intent = new Intent(getActivity(), WaitingScreen.class);
+                                        else
+                                            intent = new Intent(getActivity(), Play.class);
                                         startActivity(intent);
                                     }
                                 })

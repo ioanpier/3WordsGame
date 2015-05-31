@@ -2,10 +2,7 @@ package grioanpier.auth.users.movies;
 
 //**
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -18,7 +15,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -32,13 +28,11 @@ import grioanpier.auth.users.movies.utility.Constants;
 public class PlayFragment extends Fragment {
 
     private static String LOG_TAG = PlayFragment.class.getSimpleName();
-    private ArrayList<String> listItems = new ArrayList<>();
+    private static ArrayList<String> listItems = new ArrayList<>();
     private final static String STORY = "story so far";
     private static ArrayAdapter<String> adapter;
     private static EditText editText;
     private ListView listView;
-    private Button debug;
-    private Button toTheChat_button;
     private static int deviceType;
 
     private static final int STORY_LOADER = 0;
@@ -52,20 +46,12 @@ public class PlayFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_play, container, false);
 
         listView = (ListView) rootView.findViewById(R.id.story_listview);
-
-        //if (savedInstanceState != null)
-        //    listItems = savedInstanceState.getStringArrayList(STORY);
-        //else if (!ApplicationHelper.getInstance().story.isEmpty()) {
-        listItems = ApplicationHelper.getInstance().story;
-        //}
-
+        //listItems = ApplicationHelper.getInstance().story;
         adapter = new ArrayAdapter<>(getActivity(),
                 android.R.layout.simple_list_item_1,
-                listItems);
+                ApplicationHelper.getInstance().story);
 
         listView.setAdapter(adapter);
-
-
         editText = (EditText) rootView.findViewById(R.id.story_edittext);
 
         //Sets the soft keyboard to be hidden when the app starts.
@@ -106,43 +92,7 @@ public class PlayFragment extends Fragment {
         }
 
 
-        debug = (Button) rootView.findViewById(R.id.debug_button);
 
-        debug.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                System.out.println("debug button on click!");
-                ApplicationHelper app = ApplicationHelper.getInstance();
-                Log.v("DEBUG BUTTON", Boolean.toString(app.isHost));
-                Log.v("DEBUG BUTTON", Boolean.toString(app.myTurn));
-                Log.v("DEBUG BUTTON", Boolean.toString(app.GAME_HAS_STARTED));
-                Log.v("DEBUG BUTTON", Integer.toString(app.getWhoIsPlaying()));
-                //Log.v("DEBUG BUTTON", );
-
-                new AlertDialog.Builder(getActivity())
-                        .setMessage("Steal a turn?")
-                        .setPositiveButton("Steal!", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                editText.setFocusableInTouchMode(true);
-                                editText.setEnabled(true);
-                            }
-                        }).show();
-
-
-            }
-        });
-
-        toTheChat_button = (Button) rootView.findViewById(R.id.goToChat);
-
-        toTheChat_button.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), WaitingScreen.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-                startActivity(intent);
-            }
-        });
 
 
         return rootView;
@@ -158,22 +108,9 @@ public class PlayFragment extends Fragment {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out);
-        out.putStringArrayList(STORY, listItems);
-
-    }
-
-    @Override
     public void onStop() {
         super.onStop();
         ApplicationHelper.getInstance().unregisterStoryHandler();
-
-
-        /*StringBuilder builder = new StringBuilder();
-        for (int i=0; i<adapter.getCount(); i++)
-            builder.append(adapter.getItem(i)).append(" ");
-
         //new StoryInitialAsyncTask(getActivity()).execute(builder.toString(), ApplicationHelper.STORY_HEAD);*/
     }
 
@@ -208,9 +145,7 @@ public class PlayFragment extends Fragment {
             editText.clearFocus();
             hideKeyboard();
             ApplicationHelper.myTurn = false;
-
             ApplicationHelper.getInstance().write(message, ApplicationHelper.STORY);
-
         }
     }
 
@@ -221,6 +156,18 @@ public class PlayFragment extends Fragment {
             InputMethodManager inputManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             inputManager.hideSoftInputFromWindow(view.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
         }
+    }
+
+    /**
+     * This method is called when the game starts. It is needed in the case of two pane layouts, because the story arraylist in applicationhelper
+     * is recreated and the adapter needs to be set again.
+     */
+    public void gameHasStarted(){
+        adapter = new ArrayAdapter<>(getActivity(),
+                android.R.layout.simple_list_item_1,
+                ApplicationHelper.getInstance().story);
+
+        listView.setAdapter(adapter);
     }
 
     //Queries the database for the story and adds it to the arrayadapter.
@@ -304,8 +251,12 @@ public class PlayFragment extends Fragment {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case ApplicationHelper.STORY:
-                    ApplicationHelper.getInstance().story.add((String) msg.obj);
-                    adapter.notifyDataSetChanged();
+                    //ApplicationHelper.getInstance().story.add((String) msg.obj);
+
+                    adapter.add((String) msg.obj);
+                    System.out.println("in app: " + ApplicationHelper.getInstance().story);
+                    System.out.println("in listitems: " + listItems);
+
 
                     Log.v(LOG_TAG, "Story received Listener");
                     Log.v(LOG_TAG, "deviceType: " + deviceType);

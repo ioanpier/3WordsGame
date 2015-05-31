@@ -36,6 +36,7 @@ public class ApplicationHelper extends Application {
     public static boolean myTurn = false;
     public static boolean firstTurn = false;
     public static String STORY_HEAD;
+    public static boolean twoPane = false;
 
     public int getWhoIsPlaying() {
         return whoIsPlaying;
@@ -259,6 +260,8 @@ public class ApplicationHelper extends Application {
      */
     public synchronized void write(String message, int source) {
 
+        introduceDelay(250);
+
         synchronized (Write_Lock) {
             //Format the message.
             //This is okay because my constants are in the range of 1-127
@@ -300,24 +303,12 @@ public class ApplicationHelper extends Application {
                 for (ConnectedThread thread : connectedThreads.values())
                     thread.write(buffer);
         }
-
-        //try {
-        //    Thread.sleep(100);
-        //} catch (InterruptedException e) {
-        //    Log.v(LOG_TAG, "Interrupted");
-        //}
-
     }
 
     public synchronized void relay(String message) {
         byte[] buffer = message.getBytes();
 
-        //Don't want messages to be relayed too fast in succession because they entangled.
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Log.v(LOG_TAG, "Interrupted");
-        }
+        introduceDelay(250);
 
         for (ConnectedThread thread : connectedThreads.values()){
             Log.v(LOG_TAG, "Relaying");
@@ -330,8 +321,10 @@ public class ApplicationHelper extends Application {
 
     public void write(String message, int source, int threadPos) {
         synchronized (Write_Lock) {
-            StringBuilder builder = new StringBuilder();
 
+            introduceDelay(250);
+
+            StringBuilder builder = new StringBuilder();
 
             if (threadPos==-1){
                 builder.append(HOST_ONLY);
@@ -352,12 +345,7 @@ public class ApplicationHelper extends Application {
                 return;
             }
 
-            //Don't want messages to be relayed too fast in succession because they entangled.
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Log.v(LOG_TAG, "Interrupted");
-            }
+
 
             Collection<ConnectedThread> col = connectedThreads.values();
             if (!col.isEmpty()) {
@@ -376,6 +364,15 @@ public class ApplicationHelper extends Application {
 
     public ArrayList<String> story = new ArrayList<>();
     public ArrayList<String> chat = new ArrayList<>();
+
+    //Don't want messages to be relayed too fast in succession because they entangled.
+    private void introduceDelay(int ms){
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Log.v(LOG_TAG, "InterruptedException");
+        }
+    }
 
     public static class ApplicationHandler extends Handler {
 
@@ -406,7 +403,7 @@ public class ApplicationHelper extends Application {
                             System.out.println("Host only");
                             builder.deleteCharAt(0);
                             messageType = builder.charAt(0) - 48;
-                            System.out.println("new message type is" + messageType);
+                            System.out.println("new message type is " + messageType);
                         }else{
                             System.out.println("relay to the others");
                             ApplicationHelper.getInstance().relay(builder.toString());
@@ -455,6 +452,8 @@ public class ApplicationHelper extends Application {
                             Log.v(LOG_TAG, "Handler story write message: " + message);
                             if (storyHandler != null) //This will be null if the host has left the "Game" screen
                                 storyHandler.obtainMessage(STORY, message).sendToTarget();
+                            else
+                                System.out.println("didn't write to handler story because it was null!");
                             break;
                         case STORY_CODE:
                             message = builder.substring(1, builder.length());

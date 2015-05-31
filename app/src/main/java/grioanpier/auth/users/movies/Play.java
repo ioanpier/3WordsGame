@@ -2,6 +2,7 @@ package grioanpier.auth.users.movies;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -9,6 +10,8 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import grioanpier.auth.users.movies.data.StoriesContract;
@@ -18,6 +21,8 @@ import grioanpier.auth.users.movies.utility.ApplicationHelper;
 public class Play extends ActionBarActivity {
 
     private static final String LOG_TAG = Play.class.getSimpleName();
+    private Button debug;
+    private Button toTheChat_button;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -57,6 +62,44 @@ public class Play extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
+
+        debug = (Button) findViewById(R.id.debug_button);
+
+        debug.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                System.out.println("debug button on click!");
+                ApplicationHelper app = ApplicationHelper.getInstance();
+                Log.v("DEBUG BUTTON", Boolean.toString(app.isHost));
+                Log.v("DEBUG BUTTON", Boolean.toString(app.myTurn));
+                Log.v("DEBUG BUTTON", Boolean.toString(app.GAME_HAS_STARTED));
+                Log.v("DEBUG BUTTON", Integer.toString(app.getWhoIsPlaying()));
+                //Log.v("DEBUG BUTTON", );
+
+                //new AlertDialog.Builder(getApplicationContext())
+                //        .setMessage("Steal a turn?")
+                //        .setPositiveButton("Steal!", new DialogInterface.OnClickListener() {
+                //            public void onClick(DialogInterface dialog, int id) {
+                //                editText.setFocusableInTouchMode(true);
+                //                editText.setEnabled(true);
+                //            }
+                //        }).show();
+
+
+            }
+        });
+
+        toTheChat_button = (Button) findViewById(R.id.goToChat);
+
+        toTheChat_button.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), WaitingScreen.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override

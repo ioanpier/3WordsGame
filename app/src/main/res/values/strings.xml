@@ -54,5 +54,9 @@
 
     <!-- Play Screen -->
     <string name="goToChat">To the Chat!</string>
+    <string name="title_activity_home">Home</string>
+
+
+    <string name="horizontal">horizontal</string>
 
 </resources>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<grioanpier.auth.users.movies.utility.SplitView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:splitview="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/split_view"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    splitview:handle="@+id/handle"
+    splitview:primaryContent="@+id/primary"
+    splitview:secondaryContent="@+id/play_fragment"
+    >
+
+    <LinearLayout
+        android:id="@+id/primary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <fragment
+            android:id="@+id/waiting_screen_fragment"
+            android:name="grioanpier.auth.users.movies.WaitingScreenFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:layout="@layout/fragment_waiting_screen"
+            />
+
+        <fragment
+            android:id="@+id/chat_fragment"
+            android:name="grioanpier.auth.users.movies.BluetoothChatFragment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:context="grioanpier.auth.users.movies.BluetoothChatFragment"
+            tools:layout="@layout/fragment_bluetooth_chat"
+            />
+    </LinearLayout>
+    <ImageView
+        android:id="@+id/handle"
+        android:layout_width="fill_parent"
+        android:layout_height="20dp"
+        android:background="@drawable/shade_handlebar"
+        />
+    <fragment
+        android:id="@+id/play_fragment"
+        android:name="grioanpier.auth.users.movies.PlayFragment"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:context="grioanpier.auth.users.movies.PlayFragment"
+        tools:layout="@layout/fragment_play"
+        />
+
+
+</grioanpier.auth.users.movies.utility.SplitView>

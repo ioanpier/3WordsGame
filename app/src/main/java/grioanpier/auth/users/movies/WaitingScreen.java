@@ -16,6 +16,7 @@ import java.util.UUID;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
 import grioanpier.auth.users.movies.utility.BluetoothManager;
 import grioanpier.auth.users.movies.utility.Constants;
+import grioanpier.auth.users.movies.utility.SplitView;
 
 
 public class WaitingScreen extends ActionBarActivity implements WaitingScreenFragment.StartGameButtonClicked {
@@ -26,8 +27,11 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
     private static WaitingScreenFragment waitingScreenFragment;
     private BluetoothChatFragment bluetoothChatFragment;
+    private static PlayFragment playFragment;
     private BluetoothManager btManager;
     private static final String sBluetoothManagerFragmentTag = "bluetoothmanager";
+    private static boolean mTwoPane = false;
+    private static SplitView splitView;
 
 
     @Override
@@ -39,15 +43,30 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         //Those two fragments have been statically added inside the activity's xml!
         bluetoothChatFragment = (BluetoothChatFragment) getSupportFragmentManager().findFragmentById(R.id.chat_fragment);
         waitingScreenFragment = (WaitingScreenFragment) getSupportFragmentManager().findFragmentById(R.id.waiting_screen_fragment);
+        waitingScreenFragment.setUserVisibleHint(false);
+
+
+        if (findViewById(R.id.handle) != null) {
+            mTwoPane = true;
+            splitView = ((SplitView) findViewById(R.id.split_view));
+            playFragment = (PlayFragment) getSupportFragmentManager().findFragmentById(R.id.play_fragment);
+        } else {
+            mTwoPane = false;
+        }
 
         if (savedInstanceState == null) {
             btManager = new BluetoothManager();
             getSupportFragmentManager().beginTransaction()
                     .add(btManager, sBluetoothManagerFragmentTag)
                     .commit();
+
+            ApplicationHelper.twoPane = mTwoPane;
+
         } else {
             btManager = (BluetoothManager) getSupportFragmentManager().findFragmentByTag(sBluetoothManagerFragmentTag);
         }
+
+
 
 
     }
@@ -56,6 +75,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
     @Override
     public void onStart() {
         super.onStart();
+
         switch (deviceType) {
 
             case Constants.DEVICE_HOST: {
@@ -94,6 +114,11 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                     btManager.ensureDiscoverable();
                 break;
             }
+        }
+
+        if(mTwoPane && ApplicationHelper.getInstance().GAME_HAS_STARTED){
+            getSupportFragmentManager().beginTransaction().hide(waitingScreenFragment).commit();
+            splitView.maximizeSecondaryContent();
         }
 
         ApplicationHelper.getInstance().setActivityHandler(mHandler);
@@ -178,7 +203,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
     public static class ActivityHandler extends Handler {
 
-        Context mContext;
+        static Context mContext;
 
         protected ActivityHandler(Context context) {
             super();
@@ -206,11 +231,24 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                             //Initialize the Story Head
                             ApplicationHelper.STORY_HEAD = message.substring(1, message.length());
                             Log.v(LOG_TAG, "STORY HEAD IS " + ApplicationHelper.STORY_HEAD);
-
-                            //Start the Play activity
-                            Intent intent = new Intent(mContext, Play.class);
                             ApplicationHelper.getInstance().prepareNewStory();
-                            mContext.startActivity(intent);
+
+                            if (!mTwoPane) {
+                                //Start the Play activity
+                                Intent intent = new Intent(mContext, Play.class);
+                                mContext.startActivity(intent);
+                            } else {
+
+                                ((WaitingScreen) mContext).getSupportFragmentManager().beginTransaction()
+                                        .hide(waitingScreenFragment)
+                                        .commit();
+
+                                splitView.resetToMiddle();
+
+                                //The adapter inside the playfragment needs to be reset to the arraylist iof the story
+                                playFragment.gameHasStarted();
+                            }
+
                             break;
                         default:
                             Log.v(LOG_TAG, "other");
