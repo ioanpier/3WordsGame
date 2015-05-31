@@ -13,14 +13,11 @@ import android.widget.Toast;
 
 import grioanpier.auth.users.movies.data.StoriesContract;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
-import grioanpier.auth.users.movies.utility.Constants;
 
 
 public class Play extends ActionBarActivity {
 
     private static final String LOG_TAG = Play.class.getSimpleName();
-    private static int deviceType;
-    private static PlayFragment playFragment;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -60,38 +57,21 @@ public class Play extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
-        deviceType = ApplicationHelper.getInstance().DEVICE_TYPE;
-        playFragment = (PlayFragment) getSupportFragmentManager().findFragmentById(R.id.play_fragment);
     }
 
     @Override
     public void onStart() {
         super.onStart();
         ApplicationHelper.getInstance().setActivityHandler(mHandler);
-        playFragment.setStoryReceivedListener(storyReceivedListener);
     }
 
     @Override
     public void onStop() {
         super.onStop();
         ApplicationHelper.getInstance().unregisterActivityHandler();
-        playFragment.unregisterStoryReceivedListener();
     }
 
-
-    PlayFragment.StoryReceivedListener storyReceivedListener = new PlayFragment.StoryReceivedListener() {
-        @Override
-        public void onStoryReceived() {
-            Log.v(LOG_TAG, "Story received Listener");
-            Log.v(LOG_TAG, "deviceType: " + deviceType);
-            Log.v(LOG_TAG, "myTurn: " + Boolean.toString(ApplicationHelper.myTurn));
-            if (deviceType == Constants.DEVICE_HOST && !ApplicationHelper.myTurn){
-                Log.v(LOG_TAG, "I am the host and it's not my Turn, better notify the next player");
-                ApplicationHelper.getInstance().notifyNextPlayer();
-            }
-        }
-    };
-
+    //Used for saving the story
     public String getStory(){
         StringBuilder builder = new StringBuilder();
         for (String line : ApplicationHelper.getInstance().story){
@@ -117,38 +97,6 @@ public class Play extends ActionBarActivity {
             switch (msg.what) {
                 case ApplicationHelper.PLAYER_DISCONNECTED:
                     Toast.makeText(mContext, msg.obj + " disconnected", Toast.LENGTH_SHORT).show();
-                    break;
-                case ApplicationHelper.ACTIVITY_CODE:
-                    String message = (String) msg.obj;
-                    Log.v(LOG_TAG, "ACTIVITY_CODE case: " + message);
-                    //These messages always contain a single Integer code.
-                    int swithz = ((String)msg.obj).charAt(0) - 48;
-                    Log.v(LOG_TAG, "handler switch "+swithz);
-                    switch (swithz) {
-                        case ApplicationHelper.YOUR_TURN:
-                            Log.v(LOG_TAG, "STORY TURN");
-                            if (deviceType != Constants.DEVICE_SPECTATOR) {
-                                //Inform the playFragment to allow story input.
-                                playFragment.play();
-                                ApplicationHelper.myTurn = true;
-                            } else{
-                                Log.v(LOG_TAG, "Device is Spectator");
-                                ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.PASS), ApplicationHelper.ACTIVITY_CODE);
-                            }
-
-                            break;
-                        case ApplicationHelper.PASS:
-                            if (deviceType == Constants.DEVICE_HOST){
-                                Log.v(LOG_TAG, "Someone passed his turn (he was a spectator). Notify the next player.");
-                                ApplicationHelper.getInstance().notifyNextPlayer();
-                            }
-
-                                break;
-                        default:
-                            Log.v(LOG_TAG, "other");
-                            break;
-
-                    }
                     break;
                 default:
                     Log.v(LOG_TAG, "switch: " + msg.what);

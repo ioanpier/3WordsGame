@@ -3,7 +3,6 @@ package grioanpier.auth.users.movies;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -64,13 +63,11 @@ public class WaitingScreenFragment extends Fragment {
         super.onStart();
 
         if (ApplicationHelper.getInstance().GAME_HAS_STARTED) {
-            Log.v(LOG_TAG, "onStart1");
             mPlayersJoinedTextView.setVisibility(View.GONE);
             mWaitingForHost.setVisibility(View.GONE);
             mButton.setText(R.string.resume_story);
             mButton.setVisibility(View.VISIBLE);
         } else {
-            Log.v(LOG_TAG, "onStart2");
             switch (deviceType) {
                 case Constants.DEVICE_HOST:
                     mPlayersJoinedTextView.setText(getActivity().getString(PLAYERS_JOINED_STRING_ID, mPlayersJoined));

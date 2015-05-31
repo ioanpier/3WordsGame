@@ -27,6 +27,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
+import grioanpier.auth.users.movies.utility.Constants;
 
 public class PlayFragment extends Fragment {
 
@@ -34,10 +35,11 @@ public class PlayFragment extends Fragment {
     private ArrayList<String> listItems = new ArrayList<>();
     private final static String STORY = "story so far";
     private static ArrayAdapter<String> adapter;
-    private EditText editText;
+    private static EditText editText;
     private ListView listView;
     private Button debug;
     private Button toTheChat_button;
+    private static int deviceType;
 
     private static final int STORY_LOADER = 0;
 
@@ -54,7 +56,7 @@ public class PlayFragment extends Fragment {
         //if (savedInstanceState != null)
         //    listItems = savedInstanceState.getStringArrayList(STORY);
         //else if (!ApplicationHelper.getInstance().story.isEmpty()) {
-            listItems = ApplicationHelper.getInstance().story;
+        listItems = ApplicationHelper.getInstance().story;
         //}
 
         adapter = new ArrayAdapter<>(getActivity(),
@@ -137,7 +139,7 @@ public class PlayFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getActivity(), WaitingScreen.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(intent);
             }
         });
@@ -149,7 +151,10 @@ public class PlayFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        deviceType = ApplicationHelper.getInstance().DEVICE_TYPE;
+        mHandler = new StoryHandler(getActivity());
         ApplicationHelper.getInstance().setStoryHandler(mHandler);
+
     }
 
     @Override
@@ -183,10 +188,9 @@ public class PlayFragment extends Fragment {
     }
 
     //Your turn to play! Unlock the EditText
-    public void play() {
+    public static void play() {
         editText.setEnabled(true);
         editText.setFocusableInTouchMode(true);
-        Toast.makeText(getActivity(), "Your turn!", Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -285,7 +289,7 @@ public class PlayFragment extends Fragment {
     /**
      * The Handler that gets the messages. The messages are first handled in {@link ApplicationHelper}
      */
-    private StoryHandler mHandler = new StoryHandler(getActivity());
+    private StoryHandler mHandler;
 
     //This is extended simply because making a new Handler was giving me "a leak might occur" warning.
     public static class StoryHandler extends Handler {
@@ -303,9 +307,49 @@ public class PlayFragment extends Fragment {
                     ApplicationHelper.getInstance().story.add((String) msg.obj);
                     adapter.notifyDataSetChanged();
 
-                    if (storyReceivedListener != null) {
-                        storyReceivedListener.onStoryReceived();
+                    Log.v(LOG_TAG, "Story received Listener");
+                    Log.v(LOG_TAG, "deviceType: " + deviceType);
+                    Log.v(LOG_TAG, "myTurn: " + Boolean.toString(ApplicationHelper.myTurn));
+                    if (deviceType == Constants.DEVICE_HOST && !ApplicationHelper.myTurn){
+                        Log.v(LOG_TAG, "I am the host and it's not my Turn, better notify the next player");
+                        ApplicationHelper.getInstance().notifyNextPlayer();
                     }
+
+                    break;
+                case ApplicationHelper.STORY_CODE:
+                    String message = (String) msg.obj;
+                    Log.v(LOG_TAG, "ACTIVITY_CODE case: " + message);
+                    //These messages always contain a single Integer code.
+                    int swithz = ((String) msg.obj).charAt(0) - 48;
+                    Log.v(LOG_TAG, "handler switch " + swithz);
+                    switch (swithz) {
+                        case ApplicationHelper.YOUR_TURN:
+                            Log.v(LOG_TAG, "STORY TURN");
+                            if (deviceType != Constants.DEVICE_SPECTATOR) {
+                                //Inform the playFragment to allow story input.
+                                play();
+                                ApplicationHelper.myTurn = true;
+                                Toast.makeText(mContext, "Your turn!", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Log.v(LOG_TAG, "Device is Spectator");
+                                ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.PASS), ApplicationHelper.STORY_CODE);
+                            }
+
+                            break;
+                        case ApplicationHelper.PASS:
+                            if (deviceType == Constants.DEVICE_HOST) {
+                                Log.v(LOG_TAG, "Someone passed his turn (he was a spectator). Notify the next player.");
+                                ApplicationHelper.getInstance().notifyNextPlayer();
+                            }
+
+                            break;
+                        default:
+                            Log.v(LOG_TAG, "other");
+                            break;
+
+                    }
+
+                    break;
 
             }//outer switch
         }

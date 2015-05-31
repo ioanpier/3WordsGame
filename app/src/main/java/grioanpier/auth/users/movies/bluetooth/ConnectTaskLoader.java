@@ -32,7 +32,7 @@ public class ConnectTaskLoader extends android.support.v4.content.AsyncTaskLoade
             // An async query came in while the loader is stopped.  We don't need the result.
             if (socket != null) {
                 Log.v(LOG_TAG, "deliverResult | socket!=null");
-                onReleaseResources(socket);
+                //onReleaseResources(socket);
             }
         }
         BluetoothSocket oldData = mBtSocket;

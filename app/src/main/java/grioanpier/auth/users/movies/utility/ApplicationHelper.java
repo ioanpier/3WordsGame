@@ -109,11 +109,7 @@ public class ApplicationHelper extends Application {
 
     public void notifyNextPlayer() {
         int next = getNextPlayer();
-        if (next==-1){
-
-        }
-        write(String.valueOf(YOUR_TURN), ACTIVITY_CODE, next);
-
+        write(String.valueOf(YOUR_TURN), STORY_CODE, next);
     }
 
     /**
@@ -342,11 +338,7 @@ public class ApplicationHelper extends Application {
             }
 
 
-            switch (source) {
-                case ACTIVITY_CODE:
-                    builder.append(ACTIVITY_CODE);
-                    break;
-            }
+            builder.append(source);
 
             builder.append(message);
 
@@ -406,12 +398,17 @@ public class ApplicationHelper extends Application {
                     int messageType = builder.charAt(0) - 48;
                     String message;
 
+                    System.out.println("first message type is " +messageType);
                     if (ApplicationHelper.getInstance().isHost) {
+                        System.out.println("is host");
                         //ApplicationHelper.getInstance().write(builder.toString(), messageType);
                         if (messageType==HOST_ONLY){
+                            System.out.println("Host only");
                             builder.deleteCharAt(0);
                             messageType = builder.charAt(0) - 48;
+                            System.out.println("new message type is" + messageType);
                         }else{
+                            System.out.println("relay to the others");
                             ApplicationHelper.getInstance().relay(builder.toString());
                         }
 
@@ -459,6 +456,12 @@ public class ApplicationHelper extends Application {
                             if (storyHandler != null) //This will be null if the host has left the "Game" screen
                                 storyHandler.obtainMessage(STORY, message).sendToTarget();
                             break;
+                        case STORY_CODE:
+                            message = builder.substring(1, builder.length());
+                            Log.v(LOG_TAG, "Handler story code write message: " + message);
+                            if (storyHandler != null) //This will be null if the host has left the "Game" screen
+                                storyHandler.obtainMessage(STORY_CODE, message).sendToTarget();
+                            break;
                         case ACTIVITY_CODE:
 
 
@@ -503,7 +506,7 @@ public class ApplicationHelper extends Application {
                         ApplicationHelper.getInstance().prepareNewGame();
 
                         Intent intent = new Intent(mContext, StartingScreen.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         mContext.startActivity(intent);
 
 
@@ -519,7 +522,7 @@ public class ApplicationHelper extends Application {
 
 
                     break;
-                case ConnectedThread.THREAD_STREAM_ERROR:
+                case THREAD_STREAM_ERROR:
                     Toast.makeText(mContext, "Stream couldn't be retrieved", Toast.LENGTH_SHORT).show();
                     Log.v(LOG_TAG, "Stream couldn't be retrieved");
                     break;
@@ -536,14 +539,12 @@ public class ApplicationHelper extends Application {
     private static final int THREAD_READ = ConnectedThread.THREAD_READ;
     //Receive a message from a ConnectedThread that it has disconnected
     private static final int THREAD_DISCONNECTED = ConnectedThread.THREAD_DISCONNECTED;
-    //Send a messsage to the bluetooth chat
-    public static final int HANDLER_CHAT_WRITE = 2;
-    //Write to the story
-    public static final int HANDLER_STORY_WRITE = 3;
+    //Receive a message from a ConnectedThread that it couldn't retrieve the Input or Output Stream
+    private static final int THREAD_STREAM_ERROR =  ConnectedThread.THREAD_STREAM_ERROR;
     //These are used by the activities for code messages.
     public static final int ACTIVITY_CODE = 4;
     /*Codes for the activity handler*/
-    public static final int YOUR_TURN = 5;
+    public static final int YOUR_TURN = 5; //It's the player's turn to play.
     public static final int PASS = 6; //The player has passed his turn. This is used by spectators.
     public static final int START_GAME = 7; //The host has started the game. Next screen please!
     public static final int HOST_ONLY = 8; //The host has started the game. Next screen please!
@@ -557,7 +558,8 @@ public class ApplicationHelper extends Application {
     //Source codes for the write method.
     public static final int CHAT = 0;
     public static final int STORY = 1;
-    public static final int STORY_INITIAL = 2;
+    public static final int STORY_CODE = 9;
+
     //Codes for the chat
     public static final int MESSAGE_ME = 2;
     public static final int MESSAGE_OTHER = 3;
