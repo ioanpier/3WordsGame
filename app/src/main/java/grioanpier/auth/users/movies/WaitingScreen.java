@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import java.util.UUID;
 
+import grioanpier.auth.users.movies.data.SaveStoryAsyncTask;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
 import grioanpier.auth.users.movies.utility.BluetoothManager;
 import grioanpier.auth.users.movies.utility.Constants;
@@ -24,6 +25,8 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
     private static final String LOG_TAG = WaitingScreen.class.getSimpleName();
 
     private static int deviceType;
+    private boolean hasPromptedDiscoverable = false;
+    private final String hasPromptedDiscoverableString = "DiscoverablePrompts";
 
     private static WaitingScreenFragment waitingScreenFragment;
     private BluetoothChatFragment bluetoothChatFragment;
@@ -62,11 +65,11 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
             ApplicationHelper.twoPane = mTwoPane;
 
+
         } else {
             btManager = (BluetoothManager) getSupportFragmentManager().findFragmentByTag(sBluetoothManagerFragmentTag);
+            hasPromptedDiscoverable = savedInstanceState.getBoolean(hasPromptedDiscoverableString);
         }
-
-
 
 
     }
@@ -88,6 +91,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                         if (!enabled) {
                             Intent intent = new Intent(getApplicationContext(), StartingScreen.class);
                             startActivity(intent);
+                            finish();
                         }
                     }
 
@@ -110,13 +114,17 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                             Toast.makeText(getApplicationContext(), "Non-paired devices won't be able to find you", Toast.LENGTH_SHORT).show();
                     }
                 });
-                if (!ApplicationHelper.getInstance().GAME_HAS_STARTED)
+
+                if (!ApplicationHelper.getInstance().GAME_HAS_STARTED && !hasPromptedDiscoverable) {
                     btManager.ensureDiscoverable();
+                    hasPromptedDiscoverable = true;
+                }
+
                 break;
             }
         }
 
-        if(mTwoPane && ApplicationHelper.getInstance().GAME_HAS_STARTED){
+        if (mTwoPane && ApplicationHelper.getInstance().GAME_HAS_STARTED) {
             getSupportFragmentManager().beginTransaction().hide(waitingScreenFragment).commit();
             splitView.maximizeSecondaryContent();
         }
@@ -131,11 +139,25 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         ApplicationHelper.getInstance().unregisterActivityHandler();
     }
 
+    private static final int[] menuIDs = new int[]{
+            Menu.FIRST,
+            Menu.FIRST + 1
+    };
+
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_waiting_screen, menu);
-        return true;
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        menu.clear();
+
+        if (!ApplicationHelper.getInstance().GAME_HAS_STARTED) {
+            menu.add(0, menuIDs[0], Menu.NONE, R.string.ensure_discoverable);
+        }
+
+        if (mTwoPane && ApplicationHelper.getInstance().GAME_HAS_STARTED && menu.findItem(menuIDs[1]) == null) {
+            menu.add(0, menuIDs[1], Menu.NONE, R.string.save_story);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -144,13 +166,33 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        String title = item.getTitle().toString();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (title.equals(getString(R.string.save_story))) {
+            final Context context = this;
+
+            new SaveStoryAsyncTask(this) {
+                @Override
+                public void onPostExecute(Void result) {
+                    Toast.makeText(context, "Story saved!", Toast.LENGTH_SHORT).show();
+                }
+            }
+                    .execute();
+
+            return true;
+        } else if (title.equals(getString(R.string.ensure_discoverable))) {
+            btManager.ensureDiscoverable();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle bundle) {
+        super.onSaveInstanceState(bundle);
+        bundle.putBoolean(hasPromptedDiscoverableString, hasPromptedDiscoverable);
+
     }
 
     public void serverListenForConnections() {

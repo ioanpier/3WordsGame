@@ -17,7 +17,6 @@ public class WaitingScreenFragment extends Fragment {
     private Button mButton;
     private TextView mPlayersJoinedTextView;
     private TextView mWaitingForHost;
-
     private final String LOG_TAG = WaitingScreenFragment.class.getSimpleName();
 
     private int deviceType;

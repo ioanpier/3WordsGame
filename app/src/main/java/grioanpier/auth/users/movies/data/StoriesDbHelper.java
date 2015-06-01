@@ -23,7 +23,7 @@ public class StoriesDbHelper extends SQLiteOpenHelper{
                 StoriesContract.StoriesEntry.TABLE_NAME + " (" +
                 StoriesContract.StoriesEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 StoriesContract.StoriesEntry.COLUMN_STORY + " TEXT NOT NULL ON CONFLICT REPLACE," +
-                StoriesContract.StoriesEntry.COLUMN_HEAD + " TEXT UNIQUE NOT NULL" +
+                StoriesContract.StoriesEntry.COLUMN_HEAD + " TEXT UNIQUE NOT NULL ON CONFLICT REPLACE," +
                 " );";
         sqLiteDatabase.execSQL(SQL_CREATE_STORIES_TABLE);
     }

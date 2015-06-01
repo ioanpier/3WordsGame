@@ -1,6 +1,5 @@
 package grioanpier.auth.users.movies;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,7 +13,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import grioanpier.auth.users.movies.data.StoriesContract;
+import grioanpier.auth.users.movies.data.SaveStoryAsyncTask;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
 
 
@@ -31,6 +30,7 @@ public class Play extends ActionBarActivity {
         return true;
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -42,18 +42,16 @@ public class Play extends ActionBarActivity {
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
-        }else if (id==R.id.save_story){
-            Log.v(LOG_TAG, "save story menu item");
-            ContentValues values = new ContentValues();
-            values.put(StoriesContract.StoriesEntry.COLUMN_STORY, getStory());
-            values.put(StoriesContract.StoriesEntry.COLUMN_HEAD, ApplicationHelper.STORY_HEAD);
-
-            getContentResolver().insert(
-                    StoriesContract.StoriesEntry.CONTENT_URI,
-                    values
-            );
-
-            Toast.makeText(this, "Story saved!", Toast.LENGTH_SHORT).show();
+        } else if (id == R.id.save_story) {
+            final Context context = this;
+            new SaveStoryAsyncTask(this) {
+                @Override
+                public void onPostExecute(Void result) {
+                    Toast.makeText(context, "Story saved!", Toast.LENGTH_SHORT).show();
+                }
+            }
+                    .execute();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -63,35 +61,7 @@ public class Play extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
 
-        debug = (Button) findViewById(R.id.debug_button);
-
-        debug.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                System.out.println("debug button on click!");
-                ApplicationHelper app = ApplicationHelper.getInstance();
-                Log.v("DEBUG BUTTON", Boolean.toString(app.isHost));
-                Log.v("DEBUG BUTTON", Boolean.toString(app.myTurn));
-                Log.v("DEBUG BUTTON", Boolean.toString(app.GAME_HAS_STARTED));
-                Log.v("DEBUG BUTTON", Integer.toString(app.getWhoIsPlaying()));
-                //Log.v("DEBUG BUTTON", );
-
-                //new AlertDialog.Builder(getApplicationContext())
-                //        .setMessage("Steal a turn?")
-                //        .setPositiveButton("Steal!", new DialogInterface.OnClickListener() {
-                //            public void onClick(DialogInterface dialog, int id) {
-                //                editText.setFocusableInTouchMode(true);
-                //                editText.setEnabled(true);
-                //            }
-                //        }).show();
-
-
-            }
-        });
-
         toTheChat_button = (Button) findViewById(R.id.goToChat);
-
         toTheChat_button.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,14 +84,6 @@ public class Play extends ActionBarActivity {
         ApplicationHelper.getInstance().unregisterActivityHandler();
     }
 
-    //Used for saving the story
-    public String getStory(){
-        StringBuilder builder = new StringBuilder();
-        for (String line : ApplicationHelper.getInstance().story){
-            builder.append(line).append(" ");
-        }
-        return builder.toString();
-    }
 
     private ActivityHandler mHandler = new ActivityHandler(this);
 

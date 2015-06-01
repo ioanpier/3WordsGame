@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     tools:context="grioanpier.auth.users.movies.WaitingScreen$PlaceholderFragment"
     android:orientation="vertical"
-    android:background="@drawable/gdg">
+    android:background="@drawable/tiles_chat">
 
     <fragment
         android:id="@+id/waiting_screen_fragment"

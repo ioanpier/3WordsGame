@@ -49,12 +49,14 @@
     <string name="resume_story">To the Story!</string>
     <string name="title_activity_hall_of_stories">HallOfStories</string>
     <string name="title_activity_story__preview">Story_Preview</string>
+    <string name="ensure_discoverable">Ensure Discoverable</string>
 
 
 
     <!-- Play Screen -->
     <string name="goToChat">To the Chat!</string>
     <string name="title_activity_home">Home</string>
+    <string name="save_story">Save the Story</string>
 
 
     <string name="horizontal">horizontal</string>

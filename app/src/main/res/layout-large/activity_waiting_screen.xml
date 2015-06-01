@@ -9,14 +9,17 @@
     android:layout_height="fill_parent"
     splitview:handle="@+id/handle"
     splitview:primaryContent="@+id/primary"
-    splitview:secondaryContent="@+id/play_fragment"
+    splitview:secondaryContent="@+id/secondary"
     >
 
+    <!--Waiting Screen-->
     <LinearLayout
         android:id="@+id/primary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@drawable/tiles_chat"
+        >
         <fragment
             android:id="@+id/waiting_screen_fragment"
             android:name="grioanpier.auth.users.movies.WaitingScreenFragment"
@@ -34,20 +37,31 @@
             tools:layout="@layout/fragment_bluetooth_chat"
             />
     </LinearLayout>
+
     <ImageView
         android:id="@+id/handle"
         android:layout_width="fill_parent"
         android:layout_height="20dp"
         android:background="@drawable/shade_handlebar"
         />
-    <fragment
-        android:id="@+id/play_fragment"
-        android:name="grioanpier.auth.users.movies.PlayFragment"
+
+    <!--Play Fragment-->
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:context="grioanpier.auth.users.movies.PlayFragment"
-        tools:layout="@layout/fragment_play"
-        />
+        android:background="@drawable/tiles_story"
+        android:id="@+id/secondary">
+        <fragment
+            android:id="@+id/play_fragment"
+            android:name="grioanpier.auth.users.movies.PlayFragment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:context="grioanpier.auth.users.movies.PlayFragment"
+            tools:layout="@layout/fragment_play"
+
+            />
+    </FrameLayout>
+
 
 
 </grioanpier.auth.users.movies.utility.SplitView>

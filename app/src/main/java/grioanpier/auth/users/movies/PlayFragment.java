@@ -48,7 +48,7 @@ public class PlayFragment extends Fragment {
         listView = (ListView) rootView.findViewById(R.id.story_listview);
         //listItems = ApplicationHelper.getInstance().story;
         adapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1,
+                R.layout.message,
                 ApplicationHelper.getInstance().story);
 
         listView.setAdapter(adapter);
@@ -91,10 +91,6 @@ public class PlayFragment extends Fragment {
             editText.setFocusableInTouchMode(false);
         }
 
-
-
-
-
         return rootView;
     }
 
@@ -104,14 +100,12 @@ public class PlayFragment extends Fragment {
         deviceType = ApplicationHelper.getInstance().DEVICE_TYPE;
         mHandler = new StoryHandler(getActivity());
         ApplicationHelper.getInstance().setStoryHandler(mHandler);
-
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onDestroy(){
+        super.onDestroy();
         ApplicationHelper.getInstance().unregisterStoryHandler();
-        //new StoryInitialAsyncTask(getActivity()).execute(builder.toString(), ApplicationHelper.STORY_HEAD);*/
     }
 
     private int countWords(String s) {
@@ -164,56 +158,11 @@ public class PlayFragment extends Fragment {
      */
     public void gameHasStarted(){
         adapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_list_item_1,
+                R.layout.message,
                 ApplicationHelper.getInstance().story);
 
         listView.setAdapter(adapter);
     }
-
-    //Queries the database for the story and adds it to the arrayadapter.
-    //@Override
-    //public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-    //    Log.v(LOG_TAG, "onCreateLoader");
-    //    getActivity();
-    //    String storyHead = ApplicationHelper.STORY_HEAD;
-    //    Log.v(LOG_TAG, "validate storyHead " + storyHead);
-    //    Log.v(LOG_TAG, "play fragment create loader");
-    //    //We want the story with COLUMN_HEAD==ApplicationHelper.STORY_HEAD
-    //    return new CursorLoader(getActivity(),
-    //            StoriesContract.StoriesEntry.CONTENT_URI,
-    //            new String[]{StoriesContract.StoriesEntry.COLUMN_STORY + " = ?"},
-    //            StoriesContract.StoriesEntry.COLUMN_HEAD,
-    //            new String[]{storyHead},
-    //            null);
-    //}
-//
-    //@Override
-    //public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-    //    Log.v(LOG_TAG, "onLoadFinished");
-    //    if (!cursor.moveToFirst()){
-    //        Log.v(LOG_TAG, "Load finished but escaped!");
-    //        return;
-    //    }
-//
-    //    Log.v(LOG_TAG, "play fragment Load finished");
-//
-    //    int columnIndex = cursor.getColumnIndex(StoriesContract.StoriesEntry.COLUMN_STORY);
-    //    String story = cursor.getString(columnIndex);
-    //    Log.v(LOG_TAG, "story");
-    //    for (String s : every3words(story))
-    //        Log.v(LOG_TAG, s);
-//
-    //    adapter.clear();
-    //    adapter = new ArrayAdapter<>(getActivity(),
-    //            android.R.layout.simple_list_item_1,
-    //            every3words(story));
-//
-    //    listView.setAdapter(adapter);
-    //}
-//
-    //@Override
-    //public void onLoaderReset(Loader<Cursor> loader) {
-    //}
 
     /**
      * Seperates the string every 3 words
@@ -251,12 +200,7 @@ public class PlayFragment extends Fragment {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case ApplicationHelper.STORY:
-                    //ApplicationHelper.getInstance().story.add((String) msg.obj);
-
                     adapter.add((String) msg.obj);
-                    System.out.println("in app: " + ApplicationHelper.getInstance().story);
-                    System.out.println("in listitems: " + listItems);
-
 
                     Log.v(LOG_TAG, "Story received Listener");
                     Log.v(LOG_TAG, "deviceType: " + deviceType);
@@ -305,20 +249,5 @@ public class PlayFragment extends Fragment {
             }//outer switch
         }
     }// handler class
-
-    public interface StoryReceivedListener {
-        void onStoryReceived();
-    }
-
-    private static StoryReceivedListener storyReceivedListener;
-
-    public void setStoryReceivedListener(StoryReceivedListener listener) {
-        storyReceivedListener = listener;
-    }
-
-    public void unregisterStoryReceivedListener() {
-        storyReceivedListener = null;
-    }
-
 
 }

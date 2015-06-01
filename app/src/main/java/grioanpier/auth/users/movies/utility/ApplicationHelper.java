@@ -395,20 +395,13 @@ public class ApplicationHelper extends Application {
                     int messageType = builder.charAt(0) - 48;
                     String message;
 
-                    System.out.println("first message type is " +messageType);
                     if (ApplicationHelper.getInstance().isHost) {
-                        System.out.println("is host");
-                        //ApplicationHelper.getInstance().write(builder.toString(), messageType);
                         if (messageType==HOST_ONLY){
-                            System.out.println("Host only");
                             builder.deleteCharAt(0);
                             messageType = builder.charAt(0) - 48;
-                            System.out.println("new message type is " + messageType);
                         }else{
-                            System.out.println("relay to the others");
                             ApplicationHelper.getInstance().relay(builder.toString());
                         }
-
                     }
 
                     switch (messageType) {
