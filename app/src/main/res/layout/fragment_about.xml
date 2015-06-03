@@ -1,30 +1,31 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="fill_parent"
     android:orientation="vertical"
-    android:padding="@dimen/activity_vertical_margin"
-    tools:context="grioanpier.auth.users.movies.About$PlaceholderFragment">
+    android:weightSum="4">
 
     <TextView
         android:id="@+id/textView3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_gravity="center"
-        android:text="@string/info1"
-        android:textColor="@color/white"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:text="@string/madefor"
         android:textSize="@dimen/about_textSize" />
 
-    <TextView
+    <Button
+        android:id="@+id/instructions_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:text="@string/info2"
-        android:textColor="@color/white"
-        android:textSize="@dimen/about_textSize"
+        android:text="@string/instructions_button"
+        android:textSize="@dimen/about_textSize" />
 
-        />
+    <Button
+        android:id="@+id/contact_me_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/starting_padding_2"
+        android:text="@string/contact_button"
+        android:textSize="@dimen/about_textSize" />
+</LinearLayout>
 
 
-</RelativeLayout>

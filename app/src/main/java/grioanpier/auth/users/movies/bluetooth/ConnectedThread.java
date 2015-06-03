@@ -1,18 +1,37 @@
 package grioanpier.auth.users.movies.bluetooth;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 import android.bluetooth.BluetoothSocket;
 import android.os.Handler;
-import android.util.Log;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import grioanpier.auth.users.movies.utility.Utility;
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
 
 /**
- * Created by Ioannis on 12/4/2015.
+ * A {@link Thread} that keeps the bluetooth connection with another device.
+ * It's also the point of communication.
  */
 public class ConnectedThread extends Thread {
     private static final String LOG_TAG = ConnectedThread.class.getSimpleName();
@@ -61,10 +80,8 @@ public class ConnectedThread extends Thread {
                 }
                 mHandler.obtainMessage(THREAD_READ, numOfBytes, -1, buffer).sendToTarget();
             } catch (IOException e) {
-                Log.v(LOG_TAG, mSocket.getRemoteDevice().getName() + " has disconnected", e);
                 mHandler.obtainMessage(THREAD_DISCONNECTED, ID, -1, mSocket.getRemoteDevice().getName()).sendToTarget();
                 cancel();
-                //isActive=false;
                 break;
             }
         }
@@ -78,14 +95,10 @@ public class ConnectedThread extends Thread {
     public synchronized void write(byte[] buffer) {
         try {
             mOutStream.write(buffer);
-        } catch (IOException e) {
-            Log.v(LOG_TAG, "Exception during write");
-            Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
-        }
+        } catch (IOException e) {}
     }
 
     public synchronized void cancel() {
-        Log.v(LOG_TAG, ConnectedThread.class.getSimpleName() + " cancelled!");
         isActive=false;
 
         try{

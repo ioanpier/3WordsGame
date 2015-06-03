@@ -6,22 +6,6 @@
     <statePointEntry>
       <state      
         class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
-        className = "grioanpier.auth.users.movies.MainActivity"/>
-      <point      
-        x = "500"      
-        y = "100"/>
-    </statePointEntry>
-    <statePointEntry>
-      <state      
-        class = "com.android.tools.idea.editors.navigation.model.MenuState"      
-        className = "grioanpier.auth.users.movies.MainActivity"/>
-      <point      
-        x = "2536"      
-        y = "100"/>
-    </statePointEntry>
-    <statePointEntry>
-      <state      
-        class = "com.android.tools.idea.editors.navigation.model.ActivityState"      
         className = "grioanpier.auth.users.movies.LocalGame"/>
       <point      
         x = "484"      

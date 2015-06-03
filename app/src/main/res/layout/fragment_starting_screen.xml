@@ -1,65 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/uni"
-    >
+    android:background="@drawable/uni">
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
+        <Button
+            android:id="@+id/multiplayer_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/starting_padding_2"
+            android:text="@string/multiplayer"
+            android:textSize="@dimen/starting_screen_button" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/multiplayer"
-        android:textSize="@dimen/start_buttons"
-        android:id="@+id/multiplayer_button"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/starting_padding_2"
-        android:layout_weight="1"
-        />
+        <Button
+            android:id="@+id/localgame_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/multiplayer_button"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/starting_padding_1"
+            android:text="@string/localgame"
+            android:textSize="@dimen/starting_screen_button" />
 
-    <Button
+        <Button
+            android:id="@+id/hallofstories_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/localgame_button"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/starting_padding_1"
+            android:text="@string/hall_of_stories"
+            android:textSize="@dimen/starting_screen_button" />
 
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/localgame"
-        android:textSize="@dimen/start_buttons"
-        android:id="@+id/localgame_button"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/starting_padding_1"
-        android:layout_weight="1"/>
+        <Button
+            android:id="@+id/about_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/hallofstories_button"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="@dimen/starting_padding_1"
+            android:text="@string/about"
+            android:textSize="@dimen/starting_screen_button" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hall_of_stories"
-        android:textSize="@dimen/start_buttons"
-        android:id="@+id/hallofstories_button"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/starting_padding_1"
-        android:layout_weight="1"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/about"
-        android:textSize="@dimen/start_buttons"
-        android:id="@+id/about_button"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="@dimen/starting_padding_1"
-        android:layout_weight="1"/>
-
-    <Button
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="@string/hall_of_stories"
-        android:textSize="@dimen/start_buttons"
-        android:visibility="invisible"
-        android:enabled="false"
-        android:layout_weight="50"
-        />
-</LinearLayout>
+    </RelativeLayout>
+</ScrollView>

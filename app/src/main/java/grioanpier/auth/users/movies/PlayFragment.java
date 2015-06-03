@@ -1,13 +1,31 @@
 package grioanpier.auth.users.movies;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
-//**
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,8 +53,6 @@ public class PlayFragment extends Fragment {
     private ListView listView;
     private static int deviceType;
 
-    private static final int STORY_LOADER = 0;
-
     public PlayFragment() {
     }
 
@@ -48,7 +64,7 @@ public class PlayFragment extends Fragment {
         listView = (ListView) rootView.findViewById(R.id.story_listview);
         //listItems = ApplicationHelper.getInstance().story;
         adapter = new ArrayAdapter<>(getActivity(),
-                R.layout.message,
+                R.layout.message_story,
                 ApplicationHelper.getInstance().story);
 
         listView.setAdapter(adapter);
@@ -78,16 +94,12 @@ public class PlayFragment extends Fragment {
 
 
         if (ApplicationHelper.getInstance().isHost && ApplicationHelper.getInstance().getWhoIsPlaying() == -1) {
-            Log.v(LOG_TAG, "I am the host and it's my turn!");
             editText.setEnabled(true);
             editText.setFocusableInTouchMode(true);
         } else if (ApplicationHelper.myTurn) {
-            Log.v(LOG_TAG, "I am a player and it's my turn!");
             editText.setEnabled(true);
             editText.setFocusableInTouchMode(true);
         } else {
-            Log.v(LOG_TAG, "Nope, not my turn!");
-            //editText is disabled by default inside the xml
             editText.setFocusableInTouchMode(false);
         }
 
@@ -119,7 +131,7 @@ public class PlayFragment extends Fragment {
     }
 
     //Your turn to play! Unlock the EditText
-    public static void play() {
+    private static void play() {
         editText.setEnabled(true);
         editText.setFocusableInTouchMode(true);
     }
@@ -158,7 +170,7 @@ public class PlayFragment extends Fragment {
      */
     public void gameHasStarted(){
         adapter = new ArrayAdapter<>(getActivity(),
-                R.layout.message,
+                R.layout.message_story,
                 ApplicationHelper.getInstance().story);
 
         listView.setAdapter(adapter);
@@ -201,47 +213,33 @@ public class PlayFragment extends Fragment {
             switch (msg.what) {
                 case ApplicationHelper.STORY:
                     adapter.add((String) msg.obj);
-
-                    Log.v(LOG_TAG, "Story received Listener");
-                    Log.v(LOG_TAG, "deviceType: " + deviceType);
-                    Log.v(LOG_TAG, "myTurn: " + Boolean.toString(ApplicationHelper.myTurn));
-                    if (deviceType == Constants.DEVICE_HOST && !ApplicationHelper.myTurn){
-                        Log.v(LOG_TAG, "I am the host and it's not my Turn, better notify the next player");
+                    if (deviceType == Constants.DEVICE_HOST && !ApplicationHelper.myTurn)
                         ApplicationHelper.getInstance().notifyNextPlayer();
-                    }
 
                     break;
                 case ApplicationHelper.STORY_CODE:
-                    String message = (String) msg.obj;
-                    Log.v(LOG_TAG, "ACTIVITY_CODE case: " + message);
                     //These messages always contain a single Integer code.
                     int swithz = ((String) msg.obj).charAt(0) - 48;
-                    Log.v(LOG_TAG, "handler switch " + swithz);
                     switch (swithz) {
                         case ApplicationHelper.YOUR_TURN:
-                            Log.v(LOG_TAG, "STORY TURN");
                             if (deviceType != Constants.DEVICE_SPECTATOR) {
                                 //Inform the playFragment to allow story input.
                                 play();
                                 ApplicationHelper.myTurn = true;
                                 Toast.makeText(mContext, "Your turn!", Toast.LENGTH_SHORT).show();
                             } else {
-                                Log.v(LOG_TAG, "Device is Spectator");
                                 ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.PASS), ApplicationHelper.STORY_CODE);
                             }
 
                             break;
                         case ApplicationHelper.PASS:
                             if (deviceType == Constants.DEVICE_HOST) {
-                                Log.v(LOG_TAG, "Someone passed his turn (he was a spectator). Notify the next player.");
                                 ApplicationHelper.getInstance().notifyNextPlayer();
                             }
 
                             break;
                         default:
-                            Log.v(LOG_TAG, "other");
                             break;
-
                     }
 
                     break;

@@ -1,5 +1,25 @@
 package grioanpier.auth.users.movies;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -9,7 +29,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -47,7 +66,6 @@ public class LocalGame extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_local_game);
 
         //Finish the activity if there is no Bluetooth on the device.
@@ -71,7 +89,6 @@ public class LocalGame extends ActionBarActivity {
             frag = (PlaceholderFragment) getSupportFragmentManager().findFragmentByTag(sPlaceholderFragmentTag);
         }
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -98,10 +115,8 @@ public class LocalGame extends ActionBarActivity {
 
     @Override
     public void onStart() {
-        Log.v(LOG_TAG, "onStart");
         super.onStart();
 
-        Log.v(LOG_TAG, "GAME HAS STARTED: " + ApplicationHelper.getInstance().GAME_HAS_STARTED);
         if (ApplicationHelper.getInstance().GAME_HAS_STARTED) {
             this.finish();
         }
@@ -118,6 +133,10 @@ public class LocalGame extends ActionBarActivity {
                     if (!enabled) {
                         Toast.makeText(getApplicationContext(), "Bluetooth is needed for Local Game", Toast.LENGTH_LONG).show();
                         btManager.getActivity().finish();
+                    } else {
+                        //If the bluetooth wasn't turned on, the device name will be null.
+                        //As soon as it is turned on, requery it.
+                        ApplicationHelper.DEVICE_NAME = btManager.getMacAddress();
                     }
                 }
 
@@ -139,15 +158,6 @@ public class LocalGame extends ActionBarActivity {
 
         //The {@link BluetoothManager} starts the discovery only if it isn't already discovering.
         btManager.getAvailableDevices();
-
-        //TODO remove. These are for debugging purposes.
-        ApplicationHelper app = ApplicationHelper.getInstance();
-        Log.v(LOG_TAG, "player sockets:");
-        for (BluetoothSocket socket : app.getPlayerSockets())
-            Log.v(LOG_TAG, socket.getRemoteDevice().getName());
-        System.out.println("host Socket:");
-        if (app.getHostSocket() != null)
-            Log.v(LOG_TAG, app.getHostSocket().getRemoteDevice().getName());
     }
 
     @Override
@@ -167,9 +177,10 @@ public class LocalGame extends ActionBarActivity {
         private static final String LOG_TAG = LocalGame.class.getSimpleName() + PlaceholderFragment.class.getSimpleName();
         private static final int CONNECT_LOADER = 0;
         private static final String bundleDeviceList = "devicesListForSaveInstance";
-        private int devicesNumber = 0;
+        private static final String bundleListViewPosition = "listViewPositionForSaveInstance";
 
         private ListView listView;
+        private int mListViewPosition = ListView.INVALID_POSITION;
         private Button spectate_button;
         private Button join_button;
         private Button host_button;
@@ -200,9 +211,14 @@ public class LocalGame extends ActionBarActivity {
 
             if (devicesList != null)
                 bundle.putStringArrayList(bundleDeviceList, devicesList);
+
             if (prev != null)
                 bundle.putString(prevDeviceToAttemptToConnect, prev.getAddress());
+
             bundle.putInt(LOADER_STATE, connectLoaderState);
+
+            if (mListViewPosition != ListView.INVALID_POSITION)
+                bundle.putInt(bundleListViewPosition, mListViewPosition);
         }
 
 
@@ -213,7 +229,6 @@ public class LocalGame extends ActionBarActivity {
 
             if (savedInstanceState != null) {
                 devicesList = savedInstanceState.getStringArrayList(bundleDeviceList);
-                devicesNumber = devicesList.size();
                 devicesSet = new HashSet<>(devicesList);
 
                 String prevTemp = savedInstanceState.getString(prevDeviceToAttemptToConnect);
@@ -226,12 +241,19 @@ public class LocalGame extends ActionBarActivity {
 
         @Override
         public void onResume() {
-            Log.v(LOG_TAG, "onResume");
+
             super.onResume();
             if (connectLoaderState != STATE_NONE && !ApplicationHelper.getInstance().GAME_HAS_STARTED) {
-                Log.v(LOG_TAG, "if statement");
                 getLoaderManager().initLoader(CONNECT_LOADER, null, connectLoader);
             }
+
+            if (mListViewPosition != ListView.INVALID_POSITION) {
+                listView.smoothScrollToPosition(mListViewPosition);
+
+                listView.setSelection(mListViewPosition);
+            }
+
+
         }
 
         @Override
@@ -241,9 +263,8 @@ public class LocalGame extends ActionBarActivity {
             //call findViewById for the join and spectate buttons and assign them their respective onClickListeners
             listView = (ListView) rootView.findViewById(R.id.pairedDevicesList);
 
-
             devicesAdapter = new ArrayAdapter<>(getActivity(),
-                    android.R.layout.simple_list_item_1,
+                    R.layout.bt_devices_array_adapter,
                     devicesList);
 
             listView.setAdapter(devicesAdapter);
@@ -251,38 +272,35 @@ public class LocalGame extends ActionBarActivity {
             //Sets the current selectedView to transparent color when scrolling,
             listView.setOnScrollListener(new AbsListView.OnScrollListener() {
                 @Override
-                public void onScrollStateChanged(AbsListView view, int scrollState) {
-                    //Sets the current selectedView to transparent color when scrolling,
-                    //otherwise it might go off the visible Views and mess things up
-                    // onScrollStateChanged was selected over onScroll because it fires less times.
-                    if (selectedView != null) {
-                        selectedView.setBackgroundColor(getResources().getColor(R.color.transparent));
-                    }
-                }
+                public void onScrollStateChanged(AbsListView view, int scrollState) {}
 
                 @Override
                 public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                    if (mListViewPosition < firstVisibleItem || mListViewPosition >= firstVisibleItem + visibleItemCount) {
+                        mListViewPosition = ListView.INVALID_POSITION;
+                    }
                 }
             });
 
-            //Highlights the selected MAC and stores it in selectedMac variable
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    //Set the previous selectedView to transparent color
-                    if (selectedView != null) {
-                        selectedView.setBackgroundColor(getResources().getColor(R.color.transparent));
-                    }
 
                     //Set the current selectedView to the selected color
                     selectedView = view;
-                    selectedView.setBackgroundColor(getResources().getColor(R.color.red));
+                    selectedView.setSelected(true);
 
                     //Extract MAC address
                     selectedMAC = devicesAdapter.getItem(position);
                     selectedMAC = selectedMAC.substring(selectedMAC.indexOf("\n") + 1, selectedMAC.length());
+
+                    mListViewPosition = position;
                 }
             });
+
+            if (savedInstanceState != null && savedInstanceState.containsKey(bundleDeviceList)) {
+                mListViewPosition = savedInstanceState.getInt(bundleListViewPosition);
+            }
 
             spectate_button = (Button) rootView.findViewById(R.id.spectate_button);
             join_button = (Button) rootView.findViewById(R.id.join_button);
@@ -299,6 +317,12 @@ public class LocalGame extends ActionBarActivity {
             join_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if (mListViewPosition == ListView.INVALID_POSITION)
+                        Toast.makeText(getActivity(), "view was null", Toast.LENGTH_SHORT).show();
+                    else if (selectedView != null)
+                        Toast.makeText(getActivity(), selectedMAC, Toast.LENGTH_LONG).show();
+                    else
+                        Toast.makeText(getActivity(), "selected view was null", Toast.LENGTH_SHORT).show();
                     connect(selectedMAC, SOURCE_BUTTON_JOIN);
                 }
             });
@@ -338,8 +362,9 @@ public class LocalGame extends ActionBarActivity {
                 return;
 
             String hostAddress = ApplicationHelper.getInstance().getHostAddress();
-            if (hostAddress == null)
-                Log.v(LOG_TAG, "hostAddress was null");
+            if (hostAddress == null){
+
+            }
             else if (MACaddress.equals(hostAddress)) {
                 Toast.makeText(getActivity(), "Already connected", Toast.LENGTH_SHORT).show();
                 switch (source) {
@@ -350,13 +375,12 @@ public class LocalGame extends ActionBarActivity {
                         spectate();
                         return;
                 }
-            } else {
-                System.out.println(MACaddress + " VS " + hostAddress);
             }
 
+            //Make sure everything is clear
+            ApplicationHelper.getInstance().prepareNewGame();
+
             final BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(MACaddress);
-
-
             if (prev == null) {
                 prev = device;
             } else {
@@ -367,16 +391,13 @@ public class LocalGame extends ActionBarActivity {
             connectLoaderState = STATE_RUNNING;
             button_source = source;
             connectedDevice = device;
-            Log.v(LOG_TAG, "starting the loader");
             getLoaderManager().initLoader(CONNECT_LOADER, null, connectLoader);
-
         }
 
 
         LoaderManager.LoaderCallbacks<BluetoothSocket> connectLoader = new LoaderManager.LoaderCallbacks<BluetoothSocket>() {
             @Override
             public Loader<BluetoothSocket> onCreateLoader(int id, Bundle args) {
-                Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onCreateLoader");
                 return new ConnectTaskLoader(getActivity(), connectedDevice, Constants.sUUIDs);
             }
 
@@ -384,7 +405,6 @@ public class LocalGame extends ActionBarActivity {
             //Attempts to connect to the device. If successful, calls spectate(), join() respectively
             public void onLoadFinished(Loader<BluetoothSocket> loader, BluetoothSocket btSocket) {
                 connectLoaderState = STATE_NONE;
-                Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onLoadFinished");
                 if (btSocket != null) {
                     String name = btSocket.getRemoteDevice().getName();
                     Toast.makeText(getActivity(), "Connected to " + name, Toast.LENGTH_LONG).show();
@@ -403,9 +423,7 @@ public class LocalGame extends ActionBarActivity {
             }
 
             @Override
-            public void onLoaderReset(Loader<BluetoothSocket> loader) {
-                Log.v(LOG_TAG + " " + ConnectTaskLoader.class.getSimpleName(), "onLoaderReset");
-            }
+            public void onLoaderReset(Loader<BluetoothSocket> loader) {}
         };
 
 
@@ -443,7 +461,6 @@ public class LocalGame extends ActionBarActivity {
                 string = device.getName() + "\n" + device.getAddress();
                 if (devicesSet.add(string)) {
                     devicesAdapter.add(string);
-                    devicesNumber++;
                 }
             }
         }
@@ -452,7 +469,6 @@ public class LocalGame extends ActionBarActivity {
             String string = device.getName() + "\n" + device.getAddress();
             if (devicesSet.add(string)) {
                 devicesAdapter.add(string);
-                devicesNumber++;
             }
         }
 

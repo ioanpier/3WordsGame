@@ -5,11 +5,8 @@
     tools:context="grioanpier.auth.users.movies.PlayFragment"
     android:padding="5dp"
    >
+<grioanpier.auth.users.movies.utility.EditTextThreeWords
 
-
-
-    <grioanpier.auth.users.movies.utility.EditTextThreeWords
-        
         android:id="@+id/story_edittext"
         android:inputType="textAutoCorrect"
         android:imeOptions="actionSend"

@@ -2,11 +2,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="grioanpier.auth.users.movies.WaitingScreen$PlaceholderFragment"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingTop="@dimen/activity_vertical_margin">
 
     <TextView
         android:text="@string/waitingForHost"
@@ -14,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:textSize="@dimen/playersJoined"/>
+        android:textSize="@dimen/start_game"/>
 
     <TextView
         android:text="@string/playersJoined"
@@ -22,7 +20,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:textSize="@dimen/playersJoined"/>
+        android:textSize="@dimen/start_game"/>
+    <TextView
+        android:text="@string/your_mac_is"
+        android:id="@+id/mac"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textSize="@dimen/start_game"/>
 
     <Button
         android:layout_width="wrap_content"
@@ -30,9 +35,9 @@
         android:id="@+id/button_start_game"
         android:text="@string/startgame_button"
         android:layout_gravity="center"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="15dp"
         android:textSize="@dimen/start_game"
-        android:padding="20dp"/>
+        android:padding="5dp"/>
 
 
 </LinearLayout>

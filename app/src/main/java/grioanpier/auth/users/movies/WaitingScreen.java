@@ -1,12 +1,31 @@
 package grioanpier.auth.users.movies;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -65,7 +84,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
             ApplicationHelper.twoPane = mTwoPane;
 
-
         } else {
             btManager = (BluetoothManager) getSupportFragmentManager().findFragmentByTag(sBluetoothManagerFragmentTag);
             hasPromptedDiscoverable = savedInstanceState.getBoolean(hasPromptedDiscoverableString);
@@ -82,8 +100,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         switch (deviceType) {
 
             case Constants.DEVICE_HOST: {
-                Log.v(LOG_TAG, "device host");
-
                 //Make sure the Bluetooth is enabled. When it is, start listening for incoming connections.
                 btManager.setBluetoothRequestEnableListener(new BluetoothManager.BluetoothRequestEnableListener() {
                     @Override
@@ -105,7 +121,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                 });
                 btManager.ensureEnabled();
 
-                //TODO Ask once to make the device discoverable when the activity starts for the first time. Include "make discoverable" in options menu
                 //Prompt the user to make the device discoverable
                 btManager.setBluetoothRequestDiscoverableListener(new BluetoothManager.BluetoothRequestDiscoverableListener() {
                     @Override
@@ -146,14 +161,11 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-
         menu.clear();
-
         if (!ApplicationHelper.getInstance().GAME_HAS_STARTED) {
             menu.add(0, menuIDs[0], Menu.NONE, R.string.ensure_discoverable);
         }
-
-        if (mTwoPane && ApplicationHelper.getInstance().GAME_HAS_STARTED && menu.findItem(menuIDs[1]) == null) {
+        if (mTwoPane && ApplicationHelper.getInstance().GAME_HAS_STARTED) {
             menu.add(0, menuIDs[1], Menu.NONE, R.string.save_story);
         }
 
@@ -165,7 +177,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
         String title = item.getTitle().toString();
 
         if (title.equals(getString(R.string.save_story))) {
@@ -195,20 +206,17 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
     }
 
-    public void serverListenForConnections() {
+    private void serverListenForConnections() {
         btManager.setServerListenForConnectionsListener(new BluetoothManager.ServerListenForConnectionsListener() {
             @Override
             public void onConnectionEstablished(boolean established, String name) {
                 if (established) {
-                    Log.v(LOG_TAG, "ConnectionEstablished! with: " + name);
                     Toast.makeText(getApplicationContext(), "Connected with " + name, Toast.LENGTH_SHORT).show();
                     ApplicationHelper.removeNextAvailableUUID();
                     waitingScreenFragment.playersJoinedIncrement();
                 } else {
                     Toast.makeText(getApplicationContext(), "Connection NOT Established!", Toast.LENGTH_SHORT).show();
-                    Log.v(LOG_TAG, "Connection NOT Established!");
                 }
-
                 UUID uuid = ApplicationHelper.getNextAvailableUUID();
                 if (uuid != null) {
                     btManager.prepareServerListenForConnections();
@@ -230,7 +238,6 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
             //When the game starts, assign a random name to the story. Use a randomUUID :D
             ApplicationHelper.getInstance().prepareNewStory();
             String randomUUID = UUID.randomUUID().toString();
-            Log.v(LOG_TAG, "randomUUID headStory is " + randomUUID);
             ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.START_GAME) + randomUUID, ApplicationHelper.ACTIVITY_CODE);
         } else {
             Intent intent = new Intent(this, Play.class);
@@ -247,7 +254,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
         static Context mContext;
 
-        protected ActivityHandler(Context context) {
+        ActivityHandler(Context context) {
             super();
             mContext = context;
         }
@@ -265,14 +272,13 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                     break;
                 case ApplicationHelper.ACTIVITY_CODE:
                     String message = (String) msg.obj;
-                    Log.v(LOG_TAG, "ACTIVITY_CODE case: " + message);
+
                     int mySwitch = message.charAt(0) - 48;
                     switch (mySwitch) {
                         //Receive the code to start the game
                         case ApplicationHelper.START_GAME:
                             //Initialize the Story Head
                             ApplicationHelper.STORY_HEAD = message.substring(1, message.length());
-                            Log.v(LOG_TAG, "STORY HEAD IS " + ApplicationHelper.STORY_HEAD);
                             ApplicationHelper.getInstance().prepareNewStory();
 
                             if (!mTwoPane) {
@@ -286,22 +292,20 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
                                         .commit();
 
                                 splitView.resetToMiddle();
-
                                 //The adapter inside the playfragment needs to be reset to the arraylist iof the story
                                 playFragment.gameHasStarted();
                             }
 
                             break;
                         default:
-                            Log.v(LOG_TAG, "other");
-                            Log.v(LOG_TAG, "other, the switch is " + mySwitch);
                             break;
 
-                    }
+                    } // mySwitch
                     break;
+
                 default:
-                    Log.v(LOG_TAG, "switch: " + msg.what);
-            }
+                    break;
+            }//msg.what
         }
     }
 

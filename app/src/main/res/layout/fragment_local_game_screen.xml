@@ -19,10 +19,9 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/select_host_device"
-        android:id="@+id/join_local"
+        android:id="@+id/select_hosts_device"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:textColorHighlight="@color/red"
         />
 
     <Button
@@ -30,7 +29,6 @@
         android:layout_height="wrap_content"
         android:text="@string/join_button"
         android:id="@+id/join_button"
-
         android:layout_above="@id/hostgame_button"
         />
 
@@ -39,7 +37,6 @@
         android:layout_height="wrap_content"
         android:text="@string/spectate_button"
         android:id="@+id/spectate_button"
-
         android:layout_above="@+id/hostgame_button"
         android:layout_centerHorizontal="true" />
 
@@ -49,7 +46,6 @@
         android:layout_height="wrap_content"
         android:text="@string/refresh_button"
         android:id="@+id/refresh_button"
-
         android:layout_above="@id/hostgame_button"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
@@ -58,9 +54,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/pairedDevicesList"
-        android:layout_below="@id/join_local"
+        android:layout_below="@id/select_hosts_device"
         android:layout_above="@id/spectate_button"
-        android:clickable="false"/>
+        android:dividerHeight="0dp"
+        android:listSelector="@color/transparent"
+        />
 
 
 </RelativeLayout>

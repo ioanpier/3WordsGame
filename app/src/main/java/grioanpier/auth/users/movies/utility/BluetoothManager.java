@@ -1,5 +1,25 @@
 package grioanpier.auth.users.movies.utility;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -12,7 +32,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
-import android.util.Log;
 
 import java.util.Set;
 import java.util.UUID;
@@ -20,7 +39,7 @@ import java.util.UUID;
 import grioanpier.auth.users.movies.bluetooth.AcceptTaskLoader;
 
 /**
- * Created by Ioannis on 13/4/2015.
+ * A {@link Fragment} that contains various useful methods regarding the Bluetooth.
  */
 public class BluetoothManager extends Fragment {
 
@@ -56,19 +75,19 @@ public class BluetoothManager extends Fragment {
     private BroadcastReceiver mBluetoothStateReceiver = null;
     private final static int isDiscoverable = BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        //This is creating problems with BroadcastReceivers being leaked.
-        //setRetainInstance(true);
-    }
-
     public static boolean isBluetoothAvailable() {
         return (BluetoothAdapter.getDefaultAdapter() != null);
     }
 
     public static boolean isBluetoothEnabled() {
         return BluetoothAdapter.getDefaultAdapter().isEnabled();
+    }
+
+    public String getMacAddress() {
+        if (mBluetoothAdapter != null)
+            return mBluetoothAdapter.getAddress();
+        else
+            return "";
     }
 
     @Override
@@ -112,18 +131,14 @@ public class BluetoothManager extends Fragment {
                 int extra = intent.getIntExtra(EXTRA_STATE, 42);
                 switch (extra) {
                     case STATE_ON:
-                        Log.v(LOG_TAG, "STATE ON");
                         if (bluetoothRequestEnableListener != null)
                             bluetoothRequestEnableListener.onEnabled();
                         break;
                     case STATE_OFF:
-                        //Log.v(LOG_TAG, "STATE OFF");
                         break;
                     case STATE_TURNING_OFF:
-                        //Log.v(LOG_TAG, "STATE TURNING OFF");
                         break;
                     case STATE_TURNING_ON:
-                        //Log.v(LOG_TAG, "STATE TURNING ON");
                         break;
                 }
             }
@@ -136,7 +151,6 @@ public class BluetoothManager extends Fragment {
     public void ensureDiscoverable() {
         if (mBluetoothAdapter.getScanMode() != isDiscoverable) {
             Intent makeDiscoverable = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            //makeDiscoverable.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
             startActivityForResult(makeDiscoverable, REQUEST_MAKE_DISCOVERABLE);
         }
     }
@@ -154,7 +168,6 @@ public class BluetoothManager extends Fragment {
         filter.addAction(ACTION_DISCOVERY_STARTED);
         filter.addAction(ACTION_DISCOVERY_FINISHED);
 
-
         mDiscoveryReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 discoveryBroadcast(intent);
@@ -166,14 +179,12 @@ public class BluetoothManager extends Fragment {
 
     private void discoveryBroadcast(Intent intent) {
         String action = intent.getAction();
-        Log.v(LOG_TAG, "discoveryBroadcast for Bluetooth!");
         switch (action) {
+            //When the discovery starts
             case ACTION_DISCOVERY_STARTED:
-                Log.v(LOG_TAG, "Discovery Started");
                 break;
             // When discovery finds a device
             case ACTION_DISCOVERY_FINISHED:
-                Log.v(LOG_TAG, "Discovery Finished and Cancelled");
                 if (mDiscoveryReceiver != null) {
                     getActivity().unregisterReceiver(mDiscoveryReceiver);
                     mDiscoveryReceiver = null;
@@ -181,7 +192,6 @@ public class BluetoothManager extends Fragment {
                 break;
             case ACTION_FOUND:
                 // Get the BluetoothDevice object from the Intent
-                Log.v(LOG_TAG, "ACTION_FOUND");
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if (device != null && bluetoothGetAvailableDevicesListener != null) {
                     bluetoothGetAvailableDevicesListener.onDeviceFound(device);
@@ -201,13 +211,11 @@ public class BluetoothManager extends Fragment {
         loaderManager.initLoader(ACCEPT_LOADER, null, new LoaderManager.LoaderCallbacks<BluetoothSocket>() {
             @Override
             public Loader<BluetoothSocket> onCreateLoader(int id, Bundle args) {
-                Log.v(LOG_TAG + " " + AcceptTaskLoader.class.getSimpleName(), "onCreateLoader for uuid: " + uuid);
                 return new AcceptTaskLoader(getActivity(), uuid);
             }
 
             @Override
             public void onLoadFinished(Loader<BluetoothSocket> loader, BluetoothSocket bluetoothSocket) {
-                Log.v(LOG_TAG + " " + AcceptTaskLoader.class.getSimpleName(), "onLoadFinished");
                 if (bluetoothSocket != null)
                     ApplicationHelper.getInstance().addPlayerSocket(bluetoothSocket);
 
@@ -220,21 +228,20 @@ public class BluetoothManager extends Fragment {
             }
 
             @Override
-            public void onLoaderReset(Loader<BluetoothSocket> loader) {
-                Log.v(LOG_TAG + " " + AcceptTaskLoader.class.getSimpleName(), "onLoaderReset");
-            }
+            public void onLoaderReset(Loader<BluetoothSocket> loader) {}
         });
 
     }
 
+    /**
+     * Prepares the server to listen for incoming connections.
+     */
     public void prepareServerListenForConnections() {
         getLoaderManager().destroyLoader(ACCEPT_LOADER);
     }
 
     @Override
     public void onDestroy() {
-        //Log.v(LOG_TAG, "onDestroy");
-        super.onDestroy();
         if (mDiscoveryReceiver != null) {
             getActivity().unregisterReceiver(mDiscoveryReceiver);
             mDiscoveryReceiver = null;
@@ -243,12 +250,14 @@ public class BluetoothManager extends Fragment {
             getActivity().unregisterReceiver(mBluetoothStateReceiver);
             mBluetoothStateReceiver = null;
         }
+        mBluetoothAdapter.cancelDiscovery();
+        super.onDestroy();
     }
 
 
     public interface BluetoothRequestEnableListener {
         /**
-         * Invoked when the user decides wether to enable the Bluetooth or not.
+         * Invoked when the user decides whether to enable the Bluetooth or not.
          *
          * @param enabled true if the user activated the bluetooth, false otherwise. Note: true doesn't mean the Bluetooth is already active.
          */

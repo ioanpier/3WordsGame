@@ -39,6 +39,7 @@
     </LinearLayout>
 
     <ImageView
+        android:contentDescription="@string/handle_description"
         android:id="@+id/handle"
         android:layout_width="fill_parent"
         android:layout_height="20dp"

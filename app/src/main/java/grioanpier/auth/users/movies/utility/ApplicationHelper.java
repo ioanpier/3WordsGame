@@ -1,5 +1,25 @@
 package grioanpier.auth.users.movies.utility;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
@@ -21,10 +41,10 @@ import grioanpier.auth.users.movies.StartingScreen;
 import grioanpier.auth.users.movies.bluetooth.ConnectedThread;
 
 /**
- * Created by Ioannis on 13/4/2015.
+ * This is the Boss https://www.youtube.com/watch?v=NisCkxU544c
  */
 public class ApplicationHelper extends Application {
-    public static final ArrayList<UUID> sAvailableUUIDs = new ArrayList<>(Arrays.asList(Constants.sUUIDs));
+    private static final ArrayList<UUID> sAvailableUUIDs = new ArrayList<>(Arrays.asList(Constants.sUUIDs));
     private static ApplicationHelper singleton;
     private final static String LOG_TAG = ApplicationHelper.class.getSimpleName();
     private static ApplicationHandler applicationHandler;
@@ -34,7 +54,7 @@ public class ApplicationHelper extends Application {
     public boolean GAME_HAS_STARTED = false;
     private int whoIsPlaying;
     public static boolean myTurn = false;
-    public static boolean firstTurn = false;
+    private static boolean firstTurn = false;
     public static String STORY_HEAD;
     public static boolean twoPane = false;
 
@@ -88,7 +108,6 @@ public class ApplicationHelper extends Application {
 
     //Prepares what is needed for the new Story.
     public void prepareNewStory() {
-        Log.v(LOG_TAG, "prepareNewStory");
         //The host is positioned at -1
         whoIsPlaying = -1;
         GAME_HAS_STARTED = true;
@@ -99,12 +118,10 @@ public class ApplicationHelper extends Application {
     }
 
     private int getNextPlayer() {
-
         whoIsPlaying++;
         if (whoIsPlaying == connectedThreads.size())
             whoIsPlaying = -1;
 
-        Log.v(LOG_TAG, "getNextPlayer=" + whoIsPlaying);
         return whoIsPlaying;
     }
 
@@ -116,9 +133,8 @@ public class ApplicationHelper extends Application {
     /**
      * Called when a player leaves and ensures the correct player is up next.
      */
-    public void ensureGameIsPlaying() {
-        //If the player who left was lower than the player playing now, it will tell the same player to play.
-        //If the player who left was also his turn,
+    private void ensureGameIsPlaying() {
+        //Notifying the next player increases the counter internally so it must be decreased first.
         whoIsPlaying--;
         notifyNextPlayer();
     }
@@ -134,7 +150,7 @@ public class ApplicationHelper extends Application {
     @Override
     public void onTerminate() {
         super.onTerminate();
-        Log.v(LOG_TAG, "onTerminate");
+
         Log.e(LOG_TAG, "onTerminate");
         prepareNewGame();
     }
@@ -193,7 +209,7 @@ public class ApplicationHelper extends Application {
 
     }
 
-    public void closeHostSocket() {
+    private void closeHostSocket() {
         try {
             if (hostSocket != null)
                 hostSocket.close();
@@ -245,6 +261,13 @@ public class ApplicationHelper extends Application {
             activityHandler = null;
     }
 
+    public String getStory() {
+        StringBuilder builder = new StringBuilder();
+        for (String line : ApplicationHelper.getInstance().story) {
+            builder.append(line).append(" ");
+        }
+        return builder.toString();
+    }
 
     /**
      * Synchronization lock to be used by the write methods in order to avoid possible messages that are sent the same time
@@ -264,26 +287,20 @@ public class ApplicationHelper extends Application {
 
         synchronized (Write_Lock) {
             //Format the message.
-            //This is okay because my constants are in the range of 1-127
             StringBuilder builder = new StringBuilder();
-
-
             switch (source) {
                 case CHAT:
-                    Log.v(LOG_TAG, "CHAT");
-                    //builder.append(String.valueOf(HANDLER_CHAT_WRITE));
                     builder.append(CHAT);
                     //Add the device's name to the message.
                     if (DEVICE_NAME.length() < 10) {
+                        // 01,02,...09
                         builder.append(0);
                     }
                     builder.append(DEVICE_NAME.length())
                             .append(DEVICE_NAME);
                     break;
                 case STORY:
-                    Log.v(LOG_TAG, "STORY");
                     builder.append(STORY);
-
                     break;
                 case ACTIVITY_CODE:
                     builder.append(ACTIVITY_CODE);
@@ -291,87 +308,65 @@ public class ApplicationHelper extends Application {
             }
 
             builder.append(message);
-
-            Log.v(LOG_TAG + " write to all threads", "message to be sent: " + builder.toString());
             byte[] buffer = builder.toString().getBytes();
 
             if (isHost)
                 //The message is relayed, if needed, inside the obtainMessage method.
                 applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
             else
-                //This list only has a single thread, really.
+                //This list only has a single thread.
                 for (ConnectedThread thread : connectedThreads.values())
                     thread.write(buffer);
         }
     }
 
-    public synchronized void relay(String message) {
+    private synchronized void relay(String message) {
         byte[] buffer = message.getBytes();
-
         introduceDelay(250);
 
-        for (ConnectedThread thread : connectedThreads.values()){
-            Log.v(LOG_TAG, "Relaying");
+        for (ConnectedThread thread : connectedThreads.values()) {
             thread.write(buffer);
         }
-
-
-
     }
 
-    public void write(String message, int source, int threadPos) {
+    private void write(String message, int source, int threadPos) {
         synchronized (Write_Lock) {
-
             introduceDelay(250);
-
             StringBuilder builder = new StringBuilder();
 
-            if (threadPos==-1){
+            if (threadPos == -1)
                 builder.append(HOST_ONLY);
-            }
+            builder.append(source)
+                    .append(message);
 
-
-            builder.append(source);
-
-            builder.append(message);
-
-            Log.v(LOG_TAG + " write to single thread", "message to be sent: " + builder.toString());
             byte[] buffer = builder.toString().getBytes();
 
             //It's the host turn. This method is only called by the host, therefor send it directly to the host's Handler
             if (threadPos == -1) {
-                Log.v(LOG_TAG, "Notify the host (yourself)");
                 applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
                 return;
             }
-
 
 
             Collection<ConnectedThread> col = connectedThreads.values();
             if (!col.isEmpty()) {
                 ConnectedThread thread = (ConnectedThread) col.toArray()[threadPos];
                 if (thread != null) {
-                    Log.v(LOG_TAG, "Notify a player (someone else)");
                     thread.write(buffer);
-                } else {
-                    Log.v(LOG_TAG, "Thread was null!");
                 }
-            } else {
-                Log.v(LOG_TAG, "Collection was empty!");
             }
-        }
+
+        }//Write lock
     }
 
     public ArrayList<String> story = new ArrayList<>();
     public ArrayList<String> chat = new ArrayList<>();
 
     //Don't want messages to be relayed too fast in succession because they entangled.
-    private void introduceDelay(int ms){
+    private void introduceDelay(int ms) {
         try {
             Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            Log.v(LOG_TAG, "InterruptedException");
-        }
+        } catch (InterruptedException e) {}
     }
 
     public static class ApplicationHandler extends Handler {
@@ -385,21 +380,18 @@ public class ApplicationHelper extends Application {
 
         @Override
         public synchronized void handleMessage(Message msg) {
-            //Log.v(LOG_TAG, new String((byte[]) msg.obj, 0, msg.arg1));
             switch (msg.what) {
                 case THREAD_READ:
-
-
                     int numOfBytes = msg.arg1;
                     StringBuilder builder = new StringBuilder(new String((byte[]) msg.obj, 0, numOfBytes));
                     int messageType = builder.charAt(0) - 48;
                     String message;
 
                     if (ApplicationHelper.getInstance().isHost) {
-                        if (messageType==HOST_ONLY){
+                        if (messageType == HOST_ONLY) {
                             builder.deleteCharAt(0);
                             messageType = builder.charAt(0) - 48;
-                        }else{
+                        } else {
                             ApplicationHelper.getInstance().relay(builder.toString());
                         }
                     }
@@ -409,66 +401,31 @@ public class ApplicationHelper extends Application {
                             //The length is saved in the 2nd and 3rd byte.
                             //Reconstruct it: 56 = 5*10 + 6
                             int nameLength = (builder.charAt(1) - 48) * 10 + (builder.charAt(2) - 48);
-                            String deviceName;
-
-
-                            deviceName = builder.substring(3, nameLength + 3);
+                            String deviceName = builder.substring(3, nameLength + 3);
                             message = builder.substring(nameLength + 3, builder.length());
 
-
-                            Log.v(LOG_TAG, "number of bytes: " + numOfBytes);
-                            Log.v(LOG_TAG, "messageType: " + messageType);
-                            Log.v(LOG_TAG, "deviceName length: " + nameLength);
-                            Log.v(LOG_TAG, "deviceName: " + deviceName);
-                            Log.v(LOG_TAG, "message: " + message);
-                            if (chatHandler == null) {
-                                Log.v(LOG_TAG, "chat handler was null!");
-                                return;
+                            if (chatHandler != null) {
+                                if (deviceName.equals(DEVICE_NAME)) {
+                                    chatHandler.obtainMessage(MESSAGE_ME, "You: " + message).sendToTarget();
+                                } else {
+                                    chatHandler.obtainMessage(MESSAGE_OTHER, deviceName + ": " + message).sendToTarget();
+                                }
                             }
-
-                            int code;
-                            if (deviceName.equals(DEVICE_NAME)) {
-                                code = MESSAGE_ME;
-                                chatHandler.obtainMessage(code, "You: " + message).sendToTarget();
-                            } else {
-                                code = MESSAGE_OTHER;
-                                chatHandler.obtainMessage(code, deviceName + ": " + message).sendToTarget();
-                            }
-
-                            Log.v(LOG_TAG, "sent to chatHandler");
-
                             break;
-
-
                         case STORY:
-                            message = builder.substring(1, builder.length());
-                            Log.v(LOG_TAG, "Handler story write message: " + message);
-                            if (storyHandler != null) //This will be null if the host has left the "Game" screen
-                                storyHandler.obtainMessage(STORY, message).sendToTarget();
-                            else
-                                System.out.println("didn't write to handler story because it was null!");
+                            if (storyHandler != null)
+                                storyHandler.obtainMessage(STORY, builder.substring(1, builder.length())).sendToTarget();
                             break;
                         case STORY_CODE:
-                            message = builder.substring(1, builder.length());
-                            Log.v(LOG_TAG, "Handler story code write message: " + message);
                             if (storyHandler != null) //This will be null if the host has left the "Game" screen
-                                storyHandler.obtainMessage(STORY_CODE, message).sendToTarget();
+                                storyHandler.obtainMessage(STORY_CODE, builder.substring(1, builder.length())).sendToTarget();
                             break;
                         case ACTIVITY_CODE:
-
-
                             if (activityHandler != null) {
-                                Log.v(LOG_TAG, activityHandler.getClass().getCanonicalName());
-                                Log.v(LOG_TAG + " ACTIVITY_CODE ", builder.substring(1, builder.length()));
                                 activityHandler.obtainMessage(ACTIVITY_CODE, builder.substring(1, builder.length())).sendToTarget();
-                            } else {
-                                Log.e(LOG_TAG, "activityHandler was null");
                             }
                             break;
                         default:
-                            Log.v(LOG_TAG, "default");
-                            Log.v(LOG_TAG, "messageType: " + messageType);
-                            Log.v(LOG_TAG, "message: " + builder.toString());
                             break;
                     }
                     break;
@@ -480,7 +437,6 @@ public class ApplicationHelper extends Application {
                     //Also remove the socket from our list.
                     String who;
                     if (playerSockets.containsKey(msg.arg1)) {
-                        Log.v(LOG_TAG, "A player has disconnected!");
                         //The user who left was a player. Simply remove him.
                         playerSockets.remove(msg.arg1);
                         who = (String) msg.obj;
@@ -489,7 +445,6 @@ public class ApplicationHelper extends Application {
                         ApplicationHelper.getInstance().ensureGameIsPlaying();
 
                     } else {
-                        Log.v(LOG_TAG, "The host has disconnected!");
                         hostSocket = null;
                         who = "The host";
 
@@ -500,26 +455,19 @@ public class ApplicationHelper extends Application {
                         Intent intent = new Intent(mContext, StartingScreen.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         mContext.startActivity(intent);
-
-
                     }
 
-                    if (activityHandler == null) {
-                        Log.v(LOG_TAG, "activityHandler was null!");
-                        return;
+                    if (activityHandler != null) {
+                        //Inform the activity handler who disconnected.
+                        activityHandler.obtainMessage(PLAYER_DISCONNECTED, who).sendToTarget();
                     }
-
-                    //Inform the activity handler who disconnected.
-                    activityHandler.obtainMessage(PLAYER_DISCONNECTED, who).sendToTarget();
-
 
                     break;
                 case THREAD_STREAM_ERROR:
                     Toast.makeText(mContext, "Stream couldn't be retrieved", Toast.LENGTH_SHORT).show();
-                    Log.v(LOG_TAG, "Stream couldn't be retrieved");
                     break;
                 default:
-                    Log.v(LOG_TAG, "default: " + msg.what);
+
                     break;
             }
 
@@ -532,29 +480,27 @@ public class ApplicationHelper extends Application {
     //Receive a message from a ConnectedThread that it has disconnected
     private static final int THREAD_DISCONNECTED = ConnectedThread.THREAD_DISCONNECTED;
     //Receive a message from a ConnectedThread that it couldn't retrieve the Input or Output Stream
-    private static final int THREAD_STREAM_ERROR =  ConnectedThread.THREAD_STREAM_ERROR;
-    //These are used by the activities for code messages.
-    public static final int ACTIVITY_CODE = 4;
+    private static final int THREAD_STREAM_ERROR = ConnectedThread.THREAD_STREAM_ERROR;
+
     /*Codes for the activity handler*/
-    public static final int YOUR_TURN = 5; //It's the player's turn to play.
-    public static final int PASS = 6; //The player has passed his turn. This is used by spectators.
-    public static final int START_GAME = 7; //The host has started the game. Next screen please!
-    public static final int HOST_ONLY = 8; //The host has started the game. Next screen please!
+    public static final int YOUR_TURN = 6; //It's the player's turn to play.
+    public static final int PASS = 7; //The player has passed his turn. This is used by spectators.
+    public static final int START_GAME = 8; //The host has started the game. Next screen please!
+    private static final int HOST_ONLY = 9; //The host has started the game. Next screen please!
 
-
-    //These are provided as int
+    //These are provided as int in the msg.arg
     public static final int PLAYER_CONNECTED = 10;
     public static final int PLAYER_DISCONNECTED = 11;
 
-
-    //Source codes for the write method.
+    //Codes for the various handlers.
     public static final int CHAT = 0;
     public static final int STORY = 1;
-    public static final int STORY_CODE = 9;
+    public static final int STORY_CODE = 2;
+    public static final int ACTIVITY_CODE = 3;
 
-    //Codes for the chat
-    public static final int MESSAGE_ME = 2;
-    public static final int MESSAGE_OTHER = 3;
+    //Codes for the the sender of a chat message. Currently not used.
+    private static final int MESSAGE_ME = 4;
+    private static final int MESSAGE_OTHER = 5;
 
 
 }

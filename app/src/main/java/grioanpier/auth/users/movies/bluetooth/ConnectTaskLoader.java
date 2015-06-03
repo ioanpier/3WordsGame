@@ -1,10 +1,29 @@
 package grioanpier.auth.users.movies.bluetooth;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -17,7 +36,7 @@ public class ConnectTaskLoader extends android.support.v4.content.AsyncTaskLoade
     private static final String LOG_TAG = ConnectTaskLoader.class.getSimpleName();
     private final BluetoothDevice mBtDevice;
     private final UUID[] mUUIDs;
-    BluetoothSocket mBtSocket;
+    private BluetoothSocket mBtSocket;
 
     public ConnectTaskLoader(final Context context, BluetoothDevice bluetoothDevice, UUID... uuids) {
         super(context);
@@ -27,45 +46,16 @@ public class ConnectTaskLoader extends android.support.v4.content.AsyncTaskLoade
 
     @Override
     public void deliverResult(final BluetoothSocket socket) {
-        Log.v(LOG_TAG, "deliverResult");
-        if (isReset()) {
-            // An async query came in while the loader is stopped.  We don't need the result.
-            if (socket != null) {
-                Log.v(LOG_TAG, "deliverResult | socket!=null");
-                //onReleaseResources(socket);
-            }
-        }
-        BluetoothSocket oldData = mBtSocket;
         mBtSocket = socket;
-
-        if (isStarted()) {
-            // If the Loader is currently started, we can immediately
-            // deliver its results.
+        if (isStarted())
             super.deliverResult(socket);
-        }
-
-        // At this point we can release the resources associated with
-        // 'oldData' if needed; now that the new result is delivered we
-        // know that it is no longer in use.
-
-        //Whenever the user went back to LocalGame screen while the game was playing, these lines resulted in disconencting the
-        //player from the host.
-        //if (oldData != null) {
-        //    Log.v(LOG_TAG, "deliverResult | oldData!=null");
-        //    onReleaseResources(oldData);
-        //}
     }
 
     @Override
     protected void onStartLoading() {
-        Log.v(LOG_TAG, "onStartLoading");
         super.onStartLoading();
-        if (mBtSocket != null) {
-            // If we currently have a result available, deliver it
-            // immediately.
+        if (mBtSocket != null)
             deliverResult(mBtSocket);
-        }
-
         if (takeContentChanged() || mBtSocket == null) {
             // If the data has changed since the last time it was loaded
             // or is not currently available, start a load.
@@ -76,22 +66,17 @@ public class ConnectTaskLoader extends android.support.v4.content.AsyncTaskLoade
 
     @Override
     public BluetoothSocket loadInBackground() {
-        Log.v(LOG_TAG, "loadInBackground");
         BluetoothSocket btSocket;
         BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
 
         //Cycles through the available UUIDs and tries to connect to the specified device
         int index=0;
         do{
-            Log.v(LOG_TAG, "doing with uuid: " + mUUIDs[index]);
-
             try {
                 Thread.sleep(100);
                 btSocket = mBtDevice.createRfcommSocketToServiceRecord(mUUIDs[index]);
                 btSocket.connect();
-                Log.v(LOG_TAG, "connected");
             } catch (IOException e) {
-                //Log.v(LOG_TAG, Utility.getStackTraceString(e.getStackTrace()));
                 btSocket=null;
                 index++;
             } catch (InterruptedException e) {
@@ -103,22 +88,6 @@ public class ConnectTaskLoader extends android.support.v4.content.AsyncTaskLoade
 
         return btSocket;
     }
-
-    protected void onReleaseResources(BluetoothSocket socket) {
-        Log.v(LOG_TAG, "onReleaseResources");
-        try {
-            if (socket!=null)
-            {
-                Log.v(LOG_TAG, "closing socket: "+socket.getRemoteDevice().getName());
-                socket.close();
-            }
-
-        } catch (IOException e) {}
-    }
-
-
-
-
 }
 
 

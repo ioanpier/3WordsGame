@@ -1,11 +1,30 @@
 package grioanpier.auth.users.movies.bluetooth;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.support.v4.content.AsyncTaskLoader;
-import android.util.Log;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -36,7 +55,6 @@ public class AcceptTaskLoader extends AsyncTaskLoader<BluetoothSocket> {
             // immediately.
             deliverResult(mBtSocket);
         }
-
         if (takeContentChanged() || mBtSocket == null) {
             // If the data has changed since the last time it was loaded
             // or is not currently available, start a load.
@@ -47,67 +65,32 @@ public class AcceptTaskLoader extends AsyncTaskLoader<BluetoothSocket> {
 
     @Override
     public BluetoothSocket loadInBackground() {
-        Log.v(LOG_TAG, "loadInBackground");
         try {
-            Log.v(LOG_TAG, "getting the server socket");
             mBtServerSocket = mBluetoothAdapter.listenUsingRfcommWithServiceRecord(mUUID.toString(), mUUID);
             if (mBtServerSocket != null) {
-                Log.v(LOG_TAG, "mBtServerSocket accepting...");
                 //Cancel the Bluetooth Discovery (if active) just before accepting so that other people can find you
                 BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                 mBtSocket = mBtServerSocket.accept();
             }
-        } catch (IOException e) {
-            Log.v(LOG_TAG, e.getMessage());
-        }
+        } catch (IOException e) {}
         try {
             if (mBtServerSocket != null)
                 mBtServerSocket.close();
-        } catch (IOException e) {
-            Log.v(LOG_TAG, e.getMessage());
-        }
+        } catch (IOException e) {}
         return mBtSocket;
     }
 
     @Override
     public void deliverResult(final BluetoothSocket socket) {
-        Log.v(LOG_TAG, "deliverResult");
-        if (isReset()) {
-            // An async query came in while the loader is stopped.  We don't need the result.
-            if (socket != null) {
-                Log.v(LOG_TAG, "deliverResult | socket!=null");
-                //onReleaseResources(socket);
-            }
-        }
-
         //The {@link AcceptTaskLoader} is for accepting incoming bluetooth connections, not for managing them.
         //Therefor we ignore the previous value of the {mBtSocket}
         mBtSocket = socket;
-
-        if (isStarted()) {
-            // If the Loader is currently started, we can immediately
-            // deliver its results.
+        if (isStarted())
             super.deliverResult(socket);
-        }
-
-
-    }
-
-    protected void onReleaseResources(BluetoothSocket socket) {
-        Log.v(LOG_TAG, "onReleaseResources");
-        try {
-            if (socket != null){
-                Log.v(LOG_TAG, "closing socket: "+socket.getRemoteDevice().getName());
-                socket.close();
-            }
-
-        } catch (IOException e) {
-        }
     }
 
     @Override
     protected void onReset() {
-
         super.onReset();
         // Ensure the loader is stopped
         onStopLoading();

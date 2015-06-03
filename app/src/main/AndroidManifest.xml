@@ -9,20 +9,15 @@
         android:name=".utility.ApplicationHelper"
         android:allowBackup="true"
         android:icon="@mipmap/quick_logo"
-
-        android:theme="@style/MyAppTheme" >
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name=".StartingScreen"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name=".StartingScreen"
-            android:label="@string/title_activity_starting_screen" >
         </activity>
         <activity
             android:name=".Play"
@@ -68,16 +63,13 @@
                 android:value="grioanpier.auth.users.movies.StartingScreen" />
         </activity>
         <activity
-            android:name=".Story_Preview"
+            android:name=".StoryPreview"
             android:label="@string/title_activity_story__preview"
+            android:theme="@style/Theme.AppCompat.Light"
             android:parentActivityName=".HallOfStories" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="grioanpier.auth.users.movies.HallOfStories" />
-        </activity>
-        <activity
-            android:name=".Home"
-            android:label="@string/title_activity_home" >
         </activity>
     </application>
 

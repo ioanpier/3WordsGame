@@ -27,6 +27,7 @@
         android:layout_height="wrap_content"
         android:stackFromBottom="true"
         android:layout_above="@id/edit_text_out"
+
         />
 
 

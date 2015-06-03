@@ -1,5 +1,25 @@
 package grioanpier.auth.users.movies.utility;
+/*
+Copyright (c) <2015> Ioannis Pierros (ioanpier@gmail.com)
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ */
 import android.content.Context;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -8,17 +28,14 @@ import android.util.AttributeSet;
 import android.widget.EditText;
 
 /**
- * Created by Ioannis on 16/4/2015.
+ * An extension of {@link EditText} that places a limit on the maximum words allowed. The current limit is 3.
  */
 public class EditTextThreeWords extends EditText {
     private String LOG_TAG = EditTextThreeWords.class.getSimpleName();
-    EditTextThreeWords editText;
+    private EditTextThreeWords editText;
     private InputFilter filter;
     private final int MAX_WORDS = 3;
-
     private static final int WAITING_INPUT = 0;
-    private static final int CHANGED = 1;
-    private static final int RESTARTED = 2;
     private int status = WAITING_INPUT;
 
     public EditTextThreeWords(Context context, AttributeSet attributeSet) {
@@ -33,52 +50,17 @@ public class EditTextThreeWords extends EditText {
 
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
                 int wordsLength = countWords(s.toString());// words.length;
                 // count == 0 means a new word is going to start
                 if (count == 0 && wordsLength >= MAX_WORDS) {
-//
                     setCharLimit(editText, editText.getText().length());
-//
                 } else {
                     removeFilter(editText);
                 }
             }
 
             @Override
-            public void afterTextChanged(Editable s) {
-                //switch (status){
-                //    case WAITING_INPUT:
-                //        Log.v(LOG_TAG, "WAITING_INPUT");
-                //        String text = s.toString();
-                //        Log.v(LOG_TAG, "string is " + text);
-                //        if (!text.isEmpty()){
-                //            String[] t = text.split("\\s+");
-                //            StringBuilder builder = new StringBuilder();
-//
-                //            for (int i=0; i<t.length && i<MAX_WORDS; i++){
-                //                builder.append(t[i]).append(" ");
-                //            }
-                //            builder.deleteCharAt(builder.length()-1);
-                //            s.clear();
-                //            s.append(builder.toString());
-//
-                //        }
-                //        status = CHANGED;
-                //        break;
-//
-                //    case CHANGED:
-                //        Log.v(LOG_TAG, "CHANGED");
-                //        status = RESTARTED;
-                //        break;
-                //    case RESTARTED:
-                //        Log.v(LOG_TAG, "RESTARTED");
-                //        status = WAITING_INPUT;
-                //        break;
-                //}
-
-
-            }//afterTextChanged
+            public void afterTextChanged(Editable s) {}
         });
     }
 

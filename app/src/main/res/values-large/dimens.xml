@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- The margin that activities will have from the screen -->
+    <dimen name="activity_horizontal_margin">25dp</dimen>
+    <dimen name="activity_vertical_margin">25dp</dimen>
 
     <dimen name="about_textSize">38sp</dimen>
 
     <!-- Waiting Screen -->
-    <dimen name="playersJoined">35sp</dimen>
-    <dimen name="start_game">20sp</dimen>
+    <dimen name="playersJoined">20sp</dimen>
+    <dimen name="start_game">35sp</dimen>
 
     <!-- Starting Screen -->
     <dimen name="starting_padding_1">50dp</dimen>
     <dimen name="starting_padding_2">50dp</dimen>
     <dimen name="start_text">30sp</dimen>
-    <dimen name="start_buttons">20sp</dimen>
+    <dimen name="starting_screen_button">20sp</dimen>
 
+    <dimen name="text_size">40sp</dimen>
+
+    <dimen name="general_text_size">40sp</dimen>
 
 </resources>
