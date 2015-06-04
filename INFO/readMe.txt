@@ -20,3 +20,4 @@ CREDITS
 -http://thepatternlibrary.com/ for their patterns (background in localgame, chat and story screens).
 -The photo of the university was created and belongs to me.
 -http://android-holo-colors.com/ for the button drawables.
+-http://www.freepik.com for the application logo.
