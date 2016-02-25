@@ -135,7 +135,7 @@ public class LocalGame extends ActionBarActivity {
                         btManager.getActivity().finish();
                     } else {
                         //If the bluetooth wasn't turned on, the device name will be null.
-                        //As soon as it is turned on, requery it.
+                        //As soon as it is turned on, re-query it.
                         ApplicationHelper.DEVICE_NAME = btManager.getMacAddress();
                     }
                 }
@@ -317,12 +317,6 @@ public class LocalGame extends ActionBarActivity {
             join_button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (mListViewPosition == ListView.INVALID_POSITION)
-                        Toast.makeText(getActivity(), "view was null", Toast.LENGTH_SHORT).show();
-                    else if (selectedView != null)
-                        Toast.makeText(getActivity(), selectedMAC, Toast.LENGTH_LONG).show();
-                    else
-                        Toast.makeText(getActivity(), "selected view was null", Toast.LENGTH_SHORT).show();
                     connect(selectedMAC, SOURCE_BUTTON_JOIN);
                 }
             });
@@ -354,18 +348,18 @@ public class LocalGame extends ActionBarActivity {
          * Creates a {@link grioanpier.auth.users.movies.bluetooth.ConnectTaskLoader} to try and connect to the specified device.
          * If a connection is established, it calls the respective method for the supplied {source}
          *
-         * @param MACaddress the MAC Address of the target device.
+         * @param MAC_address the MAC Address of the target device.
          * @param source     Either {SOURCE_BUTTON_JOIN} or {SOURCE_BUTTON_SPECTATE}
          */
-        private void connect(String MACaddress, final int source) {
-            if (MACaddress == null)
+        private void connect(String MAC_address, final int source) {
+            if (MAC_address == null)
                 return;
 
             String hostAddress = ApplicationHelper.getInstance().getHostAddress();
             if (hostAddress == null){
 
             }
-            else if (MACaddress.equals(hostAddress)) {
+            else if (MAC_address.equals(hostAddress)) {
                 Toast.makeText(getActivity(), "Already connected", Toast.LENGTH_SHORT).show();
                 switch (source) {
                     case SOURCE_BUTTON_JOIN:
@@ -380,7 +374,7 @@ public class LocalGame extends ActionBarActivity {
             //Make sure everything is clear
             ApplicationHelper.getInstance().prepareNewGame();
 
-            final BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(MACaddress);
+            final BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(MAC_address);
             if (prev == null) {
                 prev = device;
             } else {

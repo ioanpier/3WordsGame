@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import grioanpier.auth.users.movies.utility.ApplicationHelper;
-
 /**
  * A {@link Thread} that keeps the bluetooth connection with another device.
  * It's also the point of communication.
@@ -49,7 +47,7 @@ public class ConnectedThread extends Thread {
 
     private boolean isActive;
 
-    public ConnectedThread(BluetoothSocket socket, ApplicationHelper.ApplicationHandler handler) {
+    public<T extends Handler> ConnectedThread(BluetoothSocket socket, T handler) {
         mSocket = socket;
         InputStream tempIn = null;
         OutputStream tempOut = null;

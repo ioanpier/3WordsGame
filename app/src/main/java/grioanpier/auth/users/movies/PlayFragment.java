@@ -115,7 +115,7 @@ public class PlayFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         super.onDestroy();
         ApplicationHelper.getInstance().unregisterStoryHandler();
     }
@@ -168,7 +168,7 @@ public class PlayFragment extends Fragment {
      * This method is called when the game starts. It is needed in the case of two pane layouts, because the story arraylist in applicationhelper
      * is recreated and the adapter needs to be set again.
      */
-    public void gameHasStarted(){
+    public void gameHasStarted() {
         adapter = new ArrayAdapter<>(getActivity(),
                 R.layout.message_story,
                 ApplicationHelper.getInstance().story);
@@ -219,23 +219,22 @@ public class PlayFragment extends Fragment {
                     break;
                 case ApplicationHelper.STORY_CODE:
                     //These messages always contain a single Integer code.
-                    int swithz = ((String) msg.obj).charAt(0) - 48;
-                    switch (swithz) {
+                    int iSwitch = ((String) msg.obj).charAt(0) - 48;
+                    switch (iSwitch) {
                         case ApplicationHelper.YOUR_TURN:
-                            if (deviceType != Constants.DEVICE_SPECTATOR) {
-                                //Inform the playFragment to allow story input.
-                                play();
-                                ApplicationHelper.myTurn = true;
-                                Toast.makeText(mContext, "Your turn!", Toast.LENGTH_SHORT).show();
-                            } else {
+                            if (deviceType == Constants.DEVICE_SPECTATOR)
                                 ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.PASS), ApplicationHelper.STORY_CODE);
-                            }
+                            else{
+                            //Inform the playFragment to allow story input.
+                            play();
+                            ApplicationHelper.myTurn = true;
+                            Toast.makeText(mContext, "Your turn!", Toast.LENGTH_SHORT).show();
+                        }
 
-                            break;
+                        break;
                         case ApplicationHelper.PASS:
-                            if (deviceType == Constants.DEVICE_HOST) {
+                            if (deviceType == Constants.DEVICE_HOST)
                                 ApplicationHelper.getInstance().notifyNextPlayer();
-                            }
 
                             break;
                         default:

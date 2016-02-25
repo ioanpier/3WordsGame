@@ -145,7 +145,6 @@ public class BluetoothManager extends Fragment {
         };
         getActivity().registerReceiver(mBluetoothStateReceiver, filter);
         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BLUETOOTH);
-
     }
 
     public void ensureDiscoverable() {
@@ -261,28 +260,28 @@ public class BluetoothManager extends Fragment {
          *
          * @param enabled true if the user activated the bluetooth, false otherwise. Note: true doesn't mean the Bluetooth is already active.
          */
-        public void onResult(boolean enabled);
+        void onResult(boolean enabled);
 
         /**
          * Invoked when the Bluetooth is fully active.
          */
-        public void onEnabled();
+        void onEnabled();
     }
 
     public interface BluetoothRequestDiscoverableListener {
-        public void onResult(boolean enabled);
+        void onResult(boolean enabled);
     }
 
     public interface BluetoothGetAvailableDevicesListener {
         /**
          * @param device the (@link BluetoothDevice) that was found.
          */
-        public void onDeviceFound(BluetoothDevice device);
+        void onDeviceFound(BluetoothDevice device);
     }
 
     public interface ServerListenForConnectionsListener {
         //Invoked when a connection was established. The result is saved in ApplicationHelper.hostSockets
-        public void onConnectionEstablished(boolean established, String name);
+        void onConnectionEstablished(boolean established, String name);
     }
 
     BluetoothRequestEnableListener bluetoothRequestEnableListener;
