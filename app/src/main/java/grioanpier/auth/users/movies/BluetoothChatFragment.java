@@ -20,10 +20,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +40,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import grioanpier.auth.users.movies.utility.ApplicationHelper;
+import grioanpier.auth.users.movies.utility.Constants;
 
 
 public class BluetoothChatFragment extends Fragment {
@@ -102,7 +105,7 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public void onStart(){
         super.onStart();
-        ApplicationHelper.getInstance().setChatHandler(mHandler);
+        ApplicationHelper.addHanlder(mHandler);
     }
 
     @Override
@@ -114,7 +117,7 @@ public class BluetoothChatFragment extends Fragment {
     @Override
     public void onDestroy(){
         super.onDestroy();
-        ApplicationHelper.getInstance().unregisterChatHandler();
+        ApplicationHelper.removeHandler(mHandler);
     }
 
     /**
@@ -124,11 +127,17 @@ public class BluetoothChatFragment extends Fragment {
     private void sendMessage(String message) {
         // Check that there's actually something to send
         if (message.length() > 0) {
-            ApplicationHelper.getInstance().write(message, ApplicationHelper.CHAT);
+            String deviceName = ApplicationHelper.DEVICE_NAME;
+            deviceName = ApplicationHelper.format(deviceName);
+
+            message = ApplicationHelper.format(message);
+            ApplicationHelper.getInstance().write(deviceName + message, Constants.BLUETOOTH_CHAT.hashCode());
             mOutEditText.setText("");
             mConversationView.setSelection(mConversationArrayAdapter.getCount() - 1);
         }
     }
+
+
 
 
     /**
@@ -139,19 +148,33 @@ public class BluetoothChatFragment extends Fragment {
     private static class ChatHandler extends Handler{
         @Override
         public void handleMessage(Message msg) {
-            ApplicationHelper.getInstance().chat.add((String) msg.obj);
+            Log.i(LOG_TAG, "Chat Handler start!");
+
+            if (msg.what!=Constants.BLUETOOTH_CHAT.hashCode()){
+                Log.i(LOG_TAG, "This isn't for me");
+                return;
+            }
+
+            String message = (String) msg.obj;
+            Log.i(LOG_TAG, message);
+
+            //Extract the device name
+            int length = ApplicationHelper.deformat(message);
+            String deviceName = message.substring(3,length+3);
+            message = message.substring(length + 3, message.length());
+
+            if (deviceName.equals(ApplicationHelper.DEVICE_NAME))
+                deviceName = "You";
+
+            //Extract the message
+            length = ApplicationHelper.deformat(message);
+            message = message.substring(3, length + 3);
+
+
+            ApplicationHelper.getInstance().chat.add(deviceName + ": " + message);
             mConversationArrayAdapter.notifyDataSetChanged();
 
-            //This is commented so that if I ever need to use this, I will remember.
-            //Maybe for displaying the messages in a different way, depending on who sent it.
-            //switch (msg.what) {
-            //    case ApplicationHelper.MESSAGE_ME:
-            //        ;
-            //        break;
-            //    case ApplicationHelper.MESSAGE_OTHER:
-            //
-            //        break;
-            //}
+            Log.i(LOG_TAG, "Chat Handler end!");
         }
     }
 

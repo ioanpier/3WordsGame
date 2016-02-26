@@ -29,4 +29,8 @@ public class Constants {
     public static final int DEVICE_PLAYER = 1;
     public static final int DEVICE_HOST = 2;
 
+    //ApplicationHelper sources
+    public static final String BLUETOOTH_CHAT = "bluetooth_chat";
+
+
 }
