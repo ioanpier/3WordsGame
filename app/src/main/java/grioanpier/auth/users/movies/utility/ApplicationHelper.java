@@ -24,9 +24,12 @@ THE SOFTWARE.
 import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
@@ -45,7 +48,7 @@ import grioanpier.auth.users.movies.bluetooth.ConnectedThread;
  */
 public class ApplicationHelper extends Application {
     private static final ArrayList<UUID> sAvailableUUIDs = new ArrayList<>(Arrays.asList(Constants.sUUIDs));
-    private SocketManager socketManager = new SocketManager();
+    private SocketManagerService socketManagerService;
     private static ApplicationHelper singleton;
     private final static String LOG_TAG = ApplicationHelper.class.getSimpleName();
     private static ApplicationHandler applicationHandler;
@@ -55,7 +58,6 @@ public class ApplicationHelper extends Application {
     public boolean GAME_HAS_STARTED = false;
     private int whoIsPlaying;
     public static boolean myTurn = false;
-    private static boolean firstTurn = false;
     public static String STORY_HEAD;
     public static boolean twoPane = false;
 
@@ -88,11 +90,14 @@ public class ApplicationHelper extends Application {
 
     //Clears everything.
     public void prepareNewGame() {
+        applicationHandler = new ApplicationHandler(getApplicationContext(), socketManagerService);
+
         sAvailableUUIDs.clear();
         sAvailableUUIDs.ensureCapacity(10);
         sAvailableUUIDs.addAll(Arrays.asList(Constants.sUUIDs));
 
-        socketManager.clear();
+        if (socketManagerService!=null)
+            socketManagerService.clear();
 
         isHost = false;
         GAME_HAS_STARTED = false;
@@ -110,7 +115,6 @@ public class ApplicationHelper extends Application {
         //The host is positioned at -1
         whoIsPlaying = -1;
         GAME_HAS_STARTED = true;
-        firstTurn = true;
         if (isHost)
             myTurn = true;
         story = new ArrayList<>();
@@ -118,7 +122,7 @@ public class ApplicationHelper extends Application {
 
     private int getNextPlayer() {
         whoIsPlaying++;
-        if (whoIsPlaying == socketManager.threadsSize())
+        if (whoIsPlaying == socketManagerService.threadsSize())
             whoIsPlaying = -1;
 
         return whoIsPlaying;
@@ -126,7 +130,7 @@ public class ApplicationHelper extends Application {
 
     public void notifyNextPlayer() {
         int next = getNextPlayer();
-        write(String.valueOf(YOUR_TURN), STORY_CODE, next);
+        write(String.valueOf(YOUR_TURN), SINGLE_RECEIVER, next);
     }
 
     /**
@@ -138,11 +142,34 @@ public class ApplicationHelper extends Application {
         notifyNextPlayer();
     }
 
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        public void onServiceConnected(ComponentName className,
+                                       IBinder binder) {
+            Log.i(LOG_TAG, "Service connected!");
+            SocketManagerService.MyBinder b = (SocketManagerService.MyBinder) binder;
+            socketManagerService = b.getService();
+            socketManagerService.clear();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            Log.i(LOG_TAG, "Service disconnected!");
+            if (socketManagerService!=null)
+                socketManagerService.clear();
+            socketManagerService = null;
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
         singleton = this;
-        applicationHandler = new ApplicationHandler(getApplicationContext(), socketManager);
+        //Start the SocketManagerService that holds the various bluetooth threads.
+        startService(new Intent(this, SocketManagerService.class));
+
+        Intent intent= new Intent(this, SocketManagerService.class);
+        bindService(intent, mConnection,
+                Context.BIND_AUTO_CREATE);
     }
 
 
@@ -151,19 +178,19 @@ public class ApplicationHelper extends Application {
         super.onTerminate();
 
         Log.e(LOG_TAG, "onTerminate");
-        prepareNewGame();
+        unbindService(mConnection);
     }
 
     public void addPlayerSocket(BluetoothSocket btSocket) {
-        socketManager.addPlayerSocket(btSocket, applicationHandler);
+        socketManagerService.addPlayerSocket(btSocket, applicationHandler);
     }
 
     public void setHostSocket(BluetoothSocket btSocket) {
-        socketManager.setHostSocket(btSocket, applicationHandler);
+        socketManagerService.setHostSocket(btSocket, applicationHandler);
     }
 
     public String getHostAddress() {
-        return socketManager.getHostAddress();
+        return socketManagerService.getHostAddress();
     }
 
     private static Handler chatHandler;
@@ -234,7 +261,6 @@ public class ApplicationHelper extends Application {
             throw new IllegalArgumentException("The size of the message cannot be bigger than 999 characters!");
 
         builder.append(message.length());
-        Log.i(LOG_TAG, "Builder length " + builder.toString().length() + " (" + builder.toString() + ")");
         builder.append(message);
 
         return builder.toString();
@@ -276,8 +302,8 @@ public class ApplicationHelper extends Application {
         synchronized (Write_Lock) {
             //Format the message.
             StringBuilder builder = new StringBuilder();
-            builder.append(format(Integer.toString(source)));
-            builder.append(message);
+            builder.append(format(Integer.toString(source)))
+                    .append(message);
             byte[] buffer = builder.toString().getBytes();
 
             if (isHost)
@@ -285,31 +311,13 @@ public class ApplicationHelper extends Application {
                 applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
             else
                 //This list only has a single thread.
-                socketManager.writeToAll(builder.toString());
+                socketManagerService.writeToAll(builder.toString());
         }
     }
 
-    public synchronized void writeNew(String message, String source) {
-        Log.i(LOG_TAG, "Write(" + message + ")");
-
-        synchronized (Write_Lock) {
-            //Format the message.
-            StringBuilder builder = new StringBuilder();
-            builder.append(format(source));
-            builder.append(message);
-            byte[] buffer = builder.toString().getBytes();
-
-            if (isHost)
-                //The message is relayed, if needed, inside the obtainMessage method.
-                applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
-            else
-                //This list only has a single thread.
-                socketManager.writeToAll(builder.toString());
-        }
-    }
 
     private synchronized void relay(String message) {
-        socketManager.writeToAll(message);
+        socketManagerService.writeToAll(message);
     }
 
     private void write(String message, int source, int threadIndex) {
@@ -317,10 +325,10 @@ public class ApplicationHelper extends Application {
 
             StringBuilder builder = new StringBuilder();
 
-            if (threadIndex == -1)
-                builder.append(HOST_ONLY);
-            builder.append(source)
+            builder.append(format(Integer.toString(source)))
                     .append(message);
+
+            Log.i(LOG_TAG, "Write with threadIndex: " + builder.toString());
 
             byte[] buffer = builder.toString().getBytes();
 
@@ -328,16 +336,17 @@ public class ApplicationHelper extends Application {
             if (threadIndex == -1)
                 applicationHandler.obtainMessage(THREAD_READ, buffer.length, -1, buffer).sendToTarget();
             else
-                socketManager.writeTo(builder.toString(), threadIndex);
+                socketManagerService.writeTo(builder.toString(), threadIndex);
         }//Write lock
     }
 
     public ArrayList<String> story = new ArrayList<>();
     public ArrayList<String> chat = new ArrayList<>();
 
-    public  static <T extends Handler> void addHanlder(T handler) {
+    public static <T extends Handler> void addHanlder(T handler) {
         applicationHandler.addHandler(handler);
     }
+
     public static <T extends Handler> void removeHandler(T handler) {
         applicationHandler.removeHandler(handler);
     }
@@ -345,13 +354,13 @@ public class ApplicationHelper extends Application {
     public static class ApplicationHandler extends Handler {
 
         private Context mContext;
-        private SocketManager mSocketManager;
+        private SocketManagerService mSocketManagerService;
         private TreeMap<Integer, Handler> mHandlers;
 
-        public ApplicationHandler(Context context, SocketManager socketManager) {
+        public ApplicationHandler(Context context, SocketManagerService socketManagerService) {
             super();
             mContext = context;
-            mSocketManager = socketManager;
+            mSocketManagerService = socketManagerService;
             mHandlers = new TreeMap<>();
         }
 
@@ -362,7 +371,6 @@ public class ApplicationHelper extends Application {
         private <T extends Handler> void removeHandler(T handler) {
             mHandlers.remove(handler.hashCode());
         }
-
 
 
         @Override
@@ -384,17 +392,21 @@ public class ApplicationHelper extends Application {
                     for (Handler handler : mHandlers.values())
                         handler.obtainMessage(source, message).sendToTarget();
 
+                    //If this isn't meant for just on person, also relay it to the other devices.
+                    if (ApplicationHelper.getInstance().isHost && source!=SINGLE_RECEIVER )
+                        mSocketManagerService.writeToAll(format(Integer.toString(source)) + message);
+
 
                     break;
                 case THREAD_DISCONNECTED:
                     Log.i(LOG_TAG, "Thread disconnected! " + msg.arg1);
                     //ConnectedThread calls ConnectedThread.cancel() internally which closes the streams and the socket.
                     //Remove it from the list as well. The thread returns its hash code in msg.arg1
-                    mSocketManager.removeThread(msg.arg1);
+                    mSocketManagerService.removeThread(msg.arg1);
 
                     //Also remove the socket from our list.
                     String who;
-                    if (mSocketManager.removePlayerSocket(msg.arg1)) {
+                    if (mSocketManagerService.removePlayerSocket(msg.arg1)) {
                         //The user who left was a player.
                         who = (String) msg.obj;
                         //Check if it was the player's who left turn
@@ -402,7 +414,7 @@ public class ApplicationHelper extends Application {
                         ApplicationHelper.getInstance().ensureGameIsPlaying();
 
                     } else {
-                        mSocketManager.removeHostSocket();
+                        mSocketManagerService.removeHostSocket();
                         who = "The host";
 
                         //Wrap up the game
@@ -431,6 +443,7 @@ public class ApplicationHelper extends Application {
             }
 
         }
+
         /*
         @Override
         public synchronized void handleMessage(Message msg) {
@@ -445,7 +458,7 @@ public class ApplicationHelper extends Application {
 
                     if (ApplicationHelper.getInstance().isHost) {
                         Log.i(LOG_TAG, "isHost");
-                        if (messageType == HOST_ONLY) {
+                        if (messageType == SINGLE_RECEIVER) {
                             Log.i(LOG_TAG, "Host_Only");
                             builder.deleteCharAt(0);
                             messageType = builder.charAt(0) - 48;
@@ -493,11 +506,11 @@ public class ApplicationHelper extends Application {
                     Log.i(LOG_TAG, "Thread disconnected! " + msg.arg1);
                     //ConnectedThread calls ConnectedThread.cancel() internally which closes the streams and the socket.
                     //Remove it from the list as well. The thread returns its hash code in msg.arg1
-                    mSocketManager.removeThread(msg.arg1);
+                    mSocketManagerService.removeThread(msg.arg1);
 
                     //Also remove the socket from our list.
                     String who;
-                    if (mSocketManager.removePlayerSocket(msg.arg1)) {
+                    if (mSocketManagerService.removePlayerSocket(msg.arg1)) {
                         //The user who left was a player.
                         who = (String) msg.obj;
                         //Check if it was the player's who left turn
@@ -505,7 +518,7 @@ public class ApplicationHelper extends Application {
                         ApplicationHelper.getInstance().ensureGameIsPlaying();
 
                     } else {
-                        mSocketManager.removeHostSocket();
+                        mSocketManagerService.removeHostSocket();
                         who = "The host";
 
                         //Wrap up the game
@@ -545,25 +558,22 @@ public class ApplicationHelper extends Application {
     //Receive a message from a ConnectedThread that it couldn't retrieve the Input or Output Stream
     private static final int THREAD_STREAM_ERROR = ConnectedThread.THREAD_STREAM_ERROR;
 
+    //Codes for the various handlers.
+    public static final int CHAT = 0;
+    public static final int STORY = 1;
+    public static final int ACTIVITY_CODE = 3;
+
     /*Codes for the activity handler*/
     public static final int YOUR_TURN = 6; //It's the player's turn to play.
     public static final int PASS = 7; //The player has passed his turn. This is used by spectators.
     public static final int START_GAME = 8; //The host has started the game. Next screen please!
-    private static final int HOST_ONLY = 9; //This is intended only for the host, don't relay!
+    public static final int SINGLE_RECEIVER = 9; //This is intended only for the host, don't relay!
 
     //These are provided as int in the msg.arg
     public static final int PLAYER_CONNECTED = 10;
     public static final int PLAYER_DISCONNECTED = 11;
 
-    //Codes for the various handlers.
-    public static final int CHAT = 0;
-    public static final int STORY = 1;
-    public static final int STORY_CODE = 2;
-    public static final int ACTIVITY_CODE = 3;
 
-    //Codes for the the sender of a chat message. Currently not used.
-    private static final int MESSAGE_ME = 4;
-    private static final int MESSAGE_OTHER = 5;
 
 
 }

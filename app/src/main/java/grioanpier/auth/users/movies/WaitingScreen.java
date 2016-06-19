@@ -20,6 +20,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  */
+
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -144,14 +145,14 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
             splitView.maximizeSecondaryContent();
         }
 
-        ApplicationHelper.getInstance().setActivityHandler(mHandler);
+        ApplicationHelper.addHanlder(mHandler);
     }
 
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ApplicationHelper.getInstance().unregisterActivityHandler();
+        ApplicationHelper.removeHandler(mHandler);
     }
 
     private static final int[] menuIDs = new int[]{
@@ -261,6 +262,7 @@ public class WaitingScreen extends ActionBarActivity implements WaitingScreenFra
 
         @Override
         public synchronized void handleMessage(Message msg) {
+
             switch (msg.what) {
                 case ApplicationHelper.PLAYER_CONNECTED:
                     if (deviceType != Constants.DEVICE_HOST)

@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -111,13 +112,13 @@ public class PlayFragment extends Fragment {
         super.onStart();
         deviceType = ApplicationHelper.getInstance().DEVICE_TYPE;
         mHandler = new StoryHandler(getActivity());
-        ApplicationHelper.getInstance().setStoryHandler(mHandler);
+        ApplicationHelper.addHanlder(mHandler);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ApplicationHelper.getInstance().unregisterStoryHandler();
+        ApplicationHelper.removeHandler(mHandler);
     }
 
     private int countWords(String s) {
@@ -165,7 +166,7 @@ public class PlayFragment extends Fragment {
     }
 
     /**
-     * This method is called when the game starts. It is needed in the case of two pane layouts, because the story arraylist in applicationhelper
+     * This method is called when the game starts. It is needed in the case of two pane layouts, because the story arrayList in ApplicationHelper
      * is recreated and the adapter needs to be set again.
      */
     public void gameHasStarted() {
@@ -210,6 +211,8 @@ public class PlayFragment extends Fragment {
 
         @Override
         public void handleMessage(Message msg) {
+            Log.i(LOG_TAG, "msg.obj: " + msg.obj);
+            Log.i(LOG_TAG, "msg.what: "+ msg.what);
             switch (msg.what) {
                 case ApplicationHelper.STORY:
                     adapter.add((String) msg.obj);
@@ -217,21 +220,19 @@ public class PlayFragment extends Fragment {
                         ApplicationHelper.getInstance().notifyNextPlayer();
 
                     break;
-                case ApplicationHelper.STORY_CODE:
-                    //These messages always contain a single Integer code.
-                    int iSwitch = ((String) msg.obj).charAt(0) - 48;
-                    switch (iSwitch) {
+                case ApplicationHelper.SINGLE_RECEIVER:
+                    int code = Integer.parseInt((String)msg.obj);
+                    switch (code) {
                         case ApplicationHelper.YOUR_TURN:
                             if (deviceType == Constants.DEVICE_SPECTATOR)
-                                ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.PASS), ApplicationHelper.STORY_CODE);
-                            else{
-                            //Inform the playFragment to allow story input.
-                            play();
-                            ApplicationHelper.myTurn = true;
-                            Toast.makeText(mContext, "Your turn!", Toast.LENGTH_SHORT).show();
-                        }
-
-                        break;
+                                ApplicationHelper.getInstance().write(String.valueOf(ApplicationHelper.PASS), ApplicationHelper.SINGLE_RECEIVER);
+                            else {
+                                //Inform the playFragment to allow story input.
+                                play();
+                                ApplicationHelper.myTurn = true;
+                                Toast.makeText(mContext, "Your turn!", Toast.LENGTH_SHORT).show();
+                            }
+                            break;
                         case ApplicationHelper.PASS:
                             if (deviceType == Constants.DEVICE_HOST)
                                 ApplicationHelper.getInstance().notifyNextPlayer();
@@ -240,8 +241,9 @@ public class PlayFragment extends Fragment {
                         default:
                             break;
                     }
-
+                    Log.i(LOG_TAG, "SINGLE_RECEIVER");
                     break;
+
 
             }//outer switch
         }
