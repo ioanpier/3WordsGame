@@ -20,7 +20,7 @@
 
     <!-- About Screen -->
     <string name="madefor">This application was made by Ioannis Pierros for the Google Developers Thessaloniki android study jams.</string>
-    <string name="instructions">"\u2022 It's a simple game where players take turns contributing their 3 words to the story.
+    <string name="instructions">"\u2022 It's a simple game where players take turns contributing their 3 words and create a story.
 
 \u2022 One of the players needs to 'host' the game and the rest to 'join' him. Please do so one at a time.
 

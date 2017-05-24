@@ -1,5 +1,19 @@
 package grioanpier.auth.users.movies.utility;
+/*
+Copyright {2016} {Ioannis Pierros (ioanpier@gmail.com)}
 
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
 import android.app.Service;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
@@ -12,6 +26,8 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.TreeMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import grioanpier.auth.users.movies.bluetooth.ConnectedThread;
 
@@ -139,14 +155,13 @@ public class SocketManagerService extends Service {
         introduceDelay(250);
         for (ConnectedThread thread : connectedThreads.values())
             thread.write(buffer);
+
     }
 
     public void writeTo(String message, int threadIndex) {
         introduceDelay(250);
         Collection<ConnectedThread> col = connectedThreads.values();
         if (!col.isEmpty()) {
-            //TODO wtf? connectedThreads is an array, this might break the proper turn
-            //Or not? As soon as the game starts, more players can't join so the ordering stays the same
             ConnectedThread thread = (ConnectedThread) col.toArray()[threadIndex];
             if (thread != null) {
                 thread.write(message.getBytes());
